@@ -69,9 +69,8 @@ flutter build apk --release --target-platform=android-arm,android-arm64 --split-
 ```
 
 ## 🏗️ Project Structure
-```
-Combined Structure BLoC and Cubit
-```
+
+Combined Structure | BLoC and Cubit
 
 ## 🛠️ Backend Setup (TALL Stack)
 

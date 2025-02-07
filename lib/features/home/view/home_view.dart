@@ -1,11 +1,53 @@
-// home_view.dart
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:syathiby/core/utils/logger_util.dart';
 import 'package:syathiby/features/home/service/attendance_service.dart';
 import 'package:syathiby/generated/locale_keys.g.dart';
 import 'package:syathiby/common/helpers/ui_helper.dart';
 import 'package:syathiby/common/widgets/custom_scaffold.dart';
+import 'package:syathiby/core/constants/color_constants.dart';
+
+class WordPressPost {
+  final String title;
+  final String content;
+  final String date;
+  final String link;
+  final String thumbnailUrl;
+
+  WordPressPost({
+    required this.title,
+    required this.content,
+    required this.date,
+    required this.link,
+    required this.thumbnailUrl,
+  });
+
+  factory WordPressPost.fromJson(Map<String, dynamic> json) {
+    String thumbnailUrl = '';
+    if (json['yoast_head_json'] != null &&
+        json['yoast_head_json']['schema'] != null &&
+        json['yoast_head_json']['schema']['@graph'] != null) {
+      for (var item in json['yoast_head_json']['schema']['@graph']) {
+        if (item['@type'] == 'Article' && item['thumbnailUrl'] != null) {
+          thumbnailUrl = item['thumbnailUrl'];
+          break;
+        }
+      }
+    }
+
+    return WordPressPost(
+      title: json['title']['rendered'] ?? '',
+      content: json['content']['rendered'] ?? '',
+      date: json['date'] ?? '',
+      link: json['link'] ?? '',
+      thumbnailUrl: thumbnailUrl,
+    );
+  }
+}
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -15,6 +57,7 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
   final AttendanceService _attendanceService = AttendanceService();
+  final List<WordPressPost> _posts = [];
   bool _canCheckIn = true;
   Map<String, dynamic>? _todayAttendance;
   final double latitude = -6.395193286627945;
@@ -24,6 +67,34 @@ class _HomeViewState extends State<HomeView> {
   void initState() {
     super.initState();
     _checkStatus();
+    _loadPosts();
+  }
+
+  String _parseHtmlString(String htmlString) {
+    return htmlString
+        .replaceAll('&#8217;', "'")
+        .replaceAll('&amp;', '&')
+        .replaceAll('&#038;', '&')
+        .replaceAll('&#8211;', '-')
+        .replaceAll(RegExp(r'<[^>]*>'), '');
+  }
+
+  Future<void> _loadPosts() async {
+    try {
+      final response = await http
+          .get(Uri.parse('https://syathiby.id/wp-json/wp/v2/posts?per_page=3'));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          _posts.clear();
+          _posts.addAll(
+              data.map((post) => WordPressPost.fromJson(post)).toList());
+        });
+      }
+    } catch (e) {
+      LoggerUtil.error('Error loading posts', e);
+    }
   }
 
   Future<void> _checkStatus() async {
@@ -66,31 +137,50 @@ class _HomeViewState extends State<HomeView> {
       }
       _checkStatus();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      if (mounted) {
+        showCupertinoDialog(
+          context: context,
+          builder: (context) => CupertinoAlertDialog(
+            title: const Text('Error'),
+            content: Text(e.toString()),
+            actions: [
+              CupertinoDialogAction(
+                child: const Text('OK'),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return CustomScaffold(
-      onRefresh: _checkStatus,
+      onRefresh: () async {
+        await _checkStatus();
+        await _loadPosts();
+      },
       title: LocaleKeys.home,
       children: [
+        // Attendance Section
         Container(
           margin: const EdgeInsets.symmetric(vertical: 20),
           padding: const EdgeInsets.all(20),
           width: UIHelper.deviceWidth,
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primaryContainer,
+            color: ColorConstants.lightPrimaryIcon,
             borderRadius: BorderRadius.circular(10),
           ),
           child: Column(
             children: [
               Text(
-                'Attendance Status',
-                style: Theme.of(context).textTheme.titleLarge,
+                'Absen Sekarang',
+                style: Theme.of(context)
+                    .textTheme
+                    .titleLarge
+                    ?.copyWith(color: Colors.white),
               ),
               const SizedBox(height: 20),
               ElevatedButton(
@@ -100,25 +190,46 @@ class _HomeViewState extends State<HomeView> {
             ],
           ),
         ),
+
+        // Today's Attendance
         if (_todayAttendance != null)
           Container(
             margin: const EdgeInsets.only(bottom: 20),
             padding: const EdgeInsets.all(20),
             width: UIHelper.deviceWidth,
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primaryContainer,
+              color: ColorConstants.lightPrimaryIcon,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Today\'s Attendance',
-                    style: Theme.of(context).textTheme.titleMedium),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: Colors.white,
+                        )),
                 const SizedBox(height: 10),
-                Text('Check In: ${_todayAttendance!['check_in'] ?? 'Not yet'}'),
                 Text(
-                    'Check Out: ${_todayAttendance!['check_out'] ?? 'Not yet'}'),
-                Text('Status: ${_todayAttendance!['status']}'),
+                  'Check In: ${_todayAttendance!['check_in'] ?? 'Not yet'}',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(color: Colors.white),
+                ),
+                Text(
+                  'Check Out: ${_todayAttendance!['check_out'] ?? 'Not yet'}',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(color: Colors.white),
+                ),
+                Text(
+                  'Status: ${_todayAttendance!['status']}',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(color: Colors.white),
+                ),
                 if (_todayAttendance!['late'] == true)
                   const Text('Status: Late',
                       style: TextStyle(color: Colors.red)),
@@ -128,6 +239,61 @@ class _HomeViewState extends State<HomeView> {
               ],
             ),
           ),
+
+        // News Section Header
+        Container(
+          margin: const EdgeInsets.only(top: 20, bottom: 10),
+          width: UIHelper.deviceWidth,
+          child: Text(
+            'Latest Post',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+        ),
+
+        // WordPress Posts
+        ..._posts
+            .map((post) => Container(
+                  margin: const EdgeInsets.only(bottom: 20),
+                  padding: const EdgeInsets.all(20),
+                  width: UIHelper.deviceWidth,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (post.thumbnailUrl.isNotEmpty)
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: CachedNetworkImage(
+                            imageUrl: post.thumbnailUrl,
+                            width: double.infinity,
+                            height: 200,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => const Center(
+                              child: CupertinoActivityIndicator(),
+                            ),
+                            errorWidget: (context, url, error) =>
+                                const Icon(Icons.error),
+                          ),
+                        ),
+                      const SizedBox(height: 10),
+                      Text(
+                        _parseHtmlString(post.title),
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 10),
+                      Text(post.date),
+                      CupertinoButton(
+                        padding: EdgeInsets.zero,
+                        child: const Text('Read More'),
+                        onPressed: () => launchUrl(Uri.parse(post.link)),
+                      ),
+                    ],
+                  ),
+                ))
+            .toList(),
       ],
     );
   }

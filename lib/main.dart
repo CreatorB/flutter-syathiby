@@ -13,8 +13,10 @@ import 'package:syathiby/common/helpers/ui_helper.dart';
 import 'package:syathiby/core/services/theme_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
+  initializeDateFormatting('id_ID', null);
   LoggerUtil.init(
     Logger(
       printer: PrettyPrinter(
@@ -36,7 +38,7 @@ void main() async {
     WidgetsFlutterBinding.ensureInitialized();
     await EasyLocalization.ensureInitialized();
     ThemeService.getTheme();
-  // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
     LoggerUtil.info('Application initialized successfully');
 
