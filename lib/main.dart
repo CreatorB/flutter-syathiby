@@ -16,7 +16,6 @@ import 'package:logger/logger.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
-  initializeDateFormatting('id_ID', null);
   LoggerUtil.init(
     Logger(
       printer: PrettyPrinter(

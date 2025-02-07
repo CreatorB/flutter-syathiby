@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -10,6 +11,7 @@ import 'package:syathiby/generated/locale_keys.g.dart';
 import 'package:syathiby/common/helpers/ui_helper.dart';
 import 'package:syathiby/common/widgets/custom_scaffold.dart';
 import 'package:syathiby/core/constants/color_constants.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class WordPressPost {
   final String title;
@@ -63,11 +65,48 @@ class _HomeViewState extends State<HomeView> {
   final double latitude = -6.395193286627945;
   final double longitude = 106.96255401126793;
 
+  String _masehi = '';
+  String _hijri = '';
+
   @override
   void initState() {
     super.initState();
     _checkStatus();
+    _loadDates();
     _loadPosts();
+  }
+
+  Future<String> _getHijriDate() async {
+    try {
+      final response = await http.get(Uri.parse(
+          'https://api.aladhan.com/v1/gToH?date=${DateFormat('dd-MM-yyyy').format(DateTime.now())}'));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final hijri = data['data']['hijri'];
+
+        // Get month name in English
+        final monthName = hijri['month']['en'];
+
+        return '${hijri['day']} $monthName ${hijri['year']} H';
+      }
+      return '';
+    } catch (e) {
+      LoggerUtil.error('Error getting Hijri date', e);
+      return '';
+    }
+  }
+
+  Future<void> _loadDates() async {
+    setState(() {
+      _masehi = DateFormat('EEEE, d MMMM yyyy', 'id_ID').format(DateTime.now());
+    });
+    final hijri = await _getHijriDate();
+    if (mounted) {
+      setState(() {
+        _hijri = hijri;
+      });
+    }
   }
 
   String _parseHtmlString(String htmlString) {
@@ -174,23 +213,47 @@ class _HomeViewState extends State<HomeView> {
             borderRadius: BorderRadius.circular(10),
           ),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                'Absen Sekarang',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleLarge
-                    ?.copyWith(color: Colors.white),
+              // Date section at top right
+              Align(
+                alignment: Alignment.center,
+                child: RichText(
+                  textAlign: TextAlign.right,
+                  text: TextSpan(
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
+                    children: [
+                      TextSpan(text: _masehi),
+                      const TextSpan(text: ' / '),
+                      TextSpan(text: _hijri),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Attendance section
+              Center(
+                child: Text(
+                  'Absen Sekarang',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(color: Colors.white),
+                ),
               ),
               const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _handleAttendance,
-                child: Text(_canCheckIn ? 'Check In' : 'Check Out'),
+              Center(
+                child: ElevatedButton(
+                  onPressed: _handleAttendance,
+                  child: Text(_canCheckIn ? 'Check In' : 'Check Out'),
+                ),
               ),
             ],
           ),
         ),
-
         // Today's Attendance
         if (_todayAttendance != null)
           Container(
