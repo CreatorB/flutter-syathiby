@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:url_launcher/url_launcher.dart';
@@ -12,6 +13,7 @@ import 'package:syathiby/common/helpers/ui_helper.dart';
 import 'package:syathiby/common/widgets/custom_scaffold.dart';
 import 'package:syathiby/core/constants/color_constants.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'dart:io';
 
 class WordPressPost {
   final String title;
@@ -58,6 +60,7 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
+  final String _baseLocal = dotenv.env['BASE_LOCAL'] ?? "";
   final AttendanceService _attendanceService = AttendanceService();
   final List<WordPressPost> _posts = [];
   bool _canCheckIn = true;
@@ -167,8 +170,42 @@ class _HomeViewState extends State<HomeView> {
     }
   }
 
+  Future<bool> _isConnectedToOfficeNetwork() async {
+    try {
+      final socket = await Socket.connect(_baseLocal, 80,
+          timeout: const Duration(seconds: 2));
+
+      socket.destroy();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   Future<void> _handleAttendance() async {
     try {
+      bool isOfficeNetwork = await _isConnectedToOfficeNetwork();
+
+      if (!isOfficeNetwork) {
+        if (mounted) {
+          showCupertinoDialog(
+            context: context,
+            builder: (context) => CupertinoAlertDialog(
+              title: const Text('Warning'),
+              content: const Text(
+                  'Afwan, fitur absen hanya bisa menggunakan jaringan (WiFi/LAN) Mahad Syathiby.'),
+              actions: [
+                CupertinoDialogAction(
+                  child: const Text('OK'),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+          );
+        }
+        return;
+      }
+
       if (_canCheckIn) {
         await _attendanceService.checkIn(latitude, longitude);
       } else {
