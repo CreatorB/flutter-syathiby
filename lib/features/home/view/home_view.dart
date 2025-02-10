@@ -67,9 +67,9 @@ class _HomeViewState extends State<HomeView> {
   Map<String, dynamic>? _todayAttendance;
   final double latitude = -6.395193286627945;
   final double longitude = 106.96255401126793;
-
   String _masehi = '';
   String _hijri = '';
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -146,8 +146,16 @@ class _HomeViewState extends State<HomeView> {
 
       if (response.data != null) {
         setState(() {
-          // Cek apakah sudah check-in dan check-out hari ini
-          final todayAttendance = response.data['today_attendance'];
+          // Explicitly convert to Map<String, dynamic>
+          final Map<String, dynamic> responseData =
+              Map<String, dynamic>.from(response.data);
+
+          // Safely check for today's attendance, providing a default empty map if null
+          final todayAttendance = responseData['today_attendance'] != null
+              ? Map<String, dynamic>.from(responseData['today_attendance'])
+              : <String, dynamic>{};
+
+          // Use null-aware operators to safely access values
           final checkIn = todayAttendance['check_in'];
           final checkOut = todayAttendance['check_out'];
 
@@ -159,12 +167,28 @@ class _HomeViewState extends State<HomeView> {
             _canCheckIn = true;
           }
 
-          _todayAttendance = response.data['today_attendance'];
+          _todayAttendance = todayAttendance;
         });
+      } else {
+        // Handle case where response data is null
+        setState(() {
+          _canCheckIn = true;
+          _todayAttendance = null;
+        });
+
+        // Optional: Log or show a message about the unexpected response
+        LoggerUtil.error('Attendance status response is null');
       }
     } catch (e) {
       if (mounted) {
         LoggerUtil.error('Error checking attendance status', e);
+
+        // Reset to default state
+        setState(() {
+          _canCheckIn = true;
+          _todayAttendance = null;
+        });
+
         showCupertinoDialog(
           context: context,
           builder: (context) => CupertinoAlertDialog(
@@ -181,6 +205,48 @@ class _HomeViewState extends State<HomeView> {
       }
     }
   }
+  // Future<void> _checkStatus() async {
+  //   try {
+  //     final response = await _attendanceService.getStatus();
+  //     LoggerUtil.debug('Status response: ${response.data}');
+
+  //     if (response.data != null) {
+  //       setState(() {
+  //         // Cek apakah sudah check-in dan check-out hari ini
+  //         final todayAttendance = response.data['today_attendance'];
+  //         final checkIn = todayAttendance['check_in'];
+  //         final checkOut = todayAttendance['check_out'];
+
+  //         // Jika belum check-out, maka tetap bisa check-out
+  //         if (checkIn != null && checkOut == null) {
+  //           _canCheckIn = false; // Sudah check-in
+  //         } else {
+  //           // Jika sudah check-out atau belum check-in sama sekali
+  //           _canCheckIn = true;
+  //         }
+
+  //         _todayAttendance = response.data['today_attendance'];
+  //       });
+  //     }
+  //   } catch (e) {
+  //     if (mounted) {
+  //       LoggerUtil.error('Error checking attendance status', e);
+  //       showCupertinoDialog(
+  //         context: context,
+  //         builder: (context) => CupertinoAlertDialog(
+  //           title: const Text('Error'),
+  //           content: Text(e.toString()),
+  //           actions: [
+  //             CupertinoDialogAction(
+  //               child: const Text('OK'),
+  //               onPressed: () => Navigator.pop(context),
+  //             ),
+  //           ],
+  //         ),
+  //       );
+  //     }
+  //   }
+  // }
 
   Future<bool> _isConnectedToOfficeNetwork() async {
     try {
@@ -195,6 +261,10 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Future<void> _handleAttendance() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
       bool isOfficeNetwork = await _isConnectedToOfficeNetwork();
 
@@ -215,6 +285,9 @@ class _HomeViewState extends State<HomeView> {
             ),
           );
         }
+        setState(() {
+          _isLoading = false;
+        });
         return;
       }
 
@@ -240,6 +313,11 @@ class _HomeViewState extends State<HomeView> {
           ),
         );
       }
+    } finally {
+      // Pastikan loading state selalu di-set ke false
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -295,11 +373,19 @@ class _HomeViewState extends State<HomeView> {
               ),
               const SizedBox(height: 20),
               Center(
-                child: ElevatedButton(
-                  onPressed: _handleAttendance,
-                  child: Text(_canCheckIn ? 'Check In' : 'Check Out'),
-                ),
+                child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : ElevatedButton(
+                        onPressed: _handleAttendance,
+                        child: Text(_canCheckIn ? 'Check In' : 'Check Out'),
+                      ),
               ),
+              // Center(
+              //   child: ElevatedButton(
+              //     onPressed: _handleAttendance,
+              //     child: Text(_canCheckIn ? 'Check In' : 'Check Out'),
+              //   ),
+              // ),
             ],
           ),
         ),
