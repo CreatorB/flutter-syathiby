@@ -146,7 +146,19 @@ class _HomeViewState extends State<HomeView> {
 
       if (response.data != null) {
         setState(() {
-          _canCheckIn = response.data['can_check_in'] ?? true;
+          // Cek apakah sudah check-in dan check-out hari ini
+          final todayAttendance = response.data['today_attendance'];
+          final checkIn = todayAttendance['check_in'];
+          final checkOut = todayAttendance['check_out'];
+
+          // Jika belum check-out, maka tetap bisa check-out
+          if (checkIn != null && checkOut == null) {
+            _canCheckIn = false; // Sudah check-in
+          } else {
+            // Jika sudah check-out atau belum check-in sama sekali
+            _canCheckIn = true;
+          }
+
           _todayAttendance = response.data['today_attendance'];
         });
       }
@@ -310,14 +322,14 @@ class _HomeViewState extends State<HomeView> {
                         )),
                 const SizedBox(height: 10),
                 Text(
-                  'Check In: ${_todayAttendance!['check_in'] ?? 'Not yet'}',
+                  'Check In: ${_todayAttendance!['check_in'] != null ? DateFormat('EEEE, dd MMMM yyyy - HH:mm', 'id_ID').format(DateTime.parse(_todayAttendance!['check_in']).toLocal()) : 'Not yet'}',
                   style: Theme.of(context)
                       .textTheme
                       .bodyMedium
                       ?.copyWith(color: Colors.white),
                 ),
                 Text(
-                  'Check Out: ${_todayAttendance!['check_out'] ?? 'Not yet'}',
+                  'Check Out: ${_todayAttendance!['check_out'] != null ? DateFormat('EEEE, dd MMMM yyyy - HH:mm', 'id_ID').format(DateTime.parse(_todayAttendance!['check_out']).toLocal()) : 'Not yet'}',
                   style: Theme.of(context)
                       .textTheme
                       .bodyMedium
