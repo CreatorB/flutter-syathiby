@@ -12,10 +12,10 @@ Mobile app development of [Ma'had Imam Asy-Syathiby](https://syathiby.id).
 
 [Al-Umm System Induk Mahad Syathiby - https://al-umm.syathiby.id](https://al-umm.syathiby.id)
 
-<div align="center" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;">
+<div align="center" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
   <br>
-  <img src="https://raw.githubusercontent.com/CreatorB/flutter-syathiby/main/demo/web-login.png" alt="Web Login" style="max-width: 30%; height: auto; flex: 1 1 45%;">
-  <img src="https://raw.githubusercontent.com/CreatorB/flutter-syathiby/main/demo/web-tapping.png" alt="Web Tapping" style="max-width: 30%; height: auto; flex: 1 1 45%;">
+  <img src="https://raw.githubusercontent.com/CreatorB/flutter-syathiby/main/demo/web-login.png" alt="Web Login" style="max-width: 250px; height: auto;">
+  <img src="https://raw.githubusercontent.com/CreatorB/flutter-syathiby/main/demo/web-tapping.png" alt="Web Tapping" style="max-width: 250px; height: auto;">
   <br>
 </div>
 
@@ -23,10 +23,10 @@ Mobile app development of [Ma'had Imam Asy-Syathiby](https://syathiby.id).
 
 [![Download apk](https://custom-icon-badges.demolab.com/badge/-Download-blue?style=for-the-badge&logo=download&logoColor=white "Download apk")](https://raw.githubusercontent.com/CreatorB/flutter-syathiby/main/demo/universal.apk)
 
-<div align="center" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;">
+<div align="center" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
   <br>
-  <img src="https://raw.githubusercontent.com/CreatorB/flutter-syathiby/main/demo/app-login.png" alt="App Login" style="max-width: 30%; height: auto; flex: 1 1 45%;">
-  <img src="https://raw.githubusercontent.com/CreatorB/flutter-syathiby/main/demo/app-dashboard.png" alt="App Dashboard" style="max-width: 30%; height: auto; flex: 1 1 45%;">
+  <img src="https://raw.githubusercontent.com/CreatorB/flutter-syathiby/main/demo/app-login.png" alt="App Login" style="max-width: 250px; height: auto;">
+  <img src="https://raw.githubusercontent.com/CreatorB/flutter-syathiby/main/demo/app-dashboard.png" alt="App Dashboard" style="max-width: 250px; height: auto;">
   <br>
 </div>
 
