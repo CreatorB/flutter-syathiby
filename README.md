@@ -8,16 +8,9 @@ Mobile app development of [Ma'had Imam Asy-Syathiby](https://syathiby.id).
 
 ## 🔬 Demo Testing
 
-**Web App**
+**iOS App**
 
-[Al-Umm System Induk Mahad Syathiby - https://al-umm.syathiby.id](https://al-umm.syathiby.id)
-
-<div align="center" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
-  <br>
-  <img src="https://raw.githubusercontent.com/CreatorB/flutter-syathiby/main/demo/web-login.png" alt="Web Login" style="max-width: 250px; height: auto;">
-  <img src="https://raw.githubusercontent.com/CreatorB/flutter-syathiby/main/demo/web-tapping.png" alt="Web Tapping" style="max-width: 250px; height: auto;">
-  <br>
-</div>
+⏳ _Coming soon_
 
 **Android App**
 
@@ -25,14 +18,21 @@ Mobile app development of [Ma'had Imam Asy-Syathiby](https://syathiby.id).
 
 <div align="center" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
   <br>
-  <img src="https://raw.githubusercontent.com/CreatorB/flutter-syathiby/main/demo/app-login.png" alt="App Login" style="max-width: 250px; height: auto;">
-  <img src="https://raw.githubusercontent.com/CreatorB/flutter-syathiby/main/demo/app-dashboard.png" alt="App Dashboard" style="max-width: 250px; height: auto;">
+  <img src="https://raw.githubusercontent.com/CreatorB/flutter-syathiby/main/demo/app-login.png" alt="App Login" style="max-width: 250px; height: 250px;">
+  <img src="https://raw.githubusercontent.com/CreatorB/flutter-syathiby/main/demo/app-dashboard.png" alt="App Dashboard" style="max-width: 250px; height: 250px;">
   <br>
 </div>
 
-**iOS App**
+**Web App**
 
-⏳ _Coming soon_
+[Al-Umm System Induk Mahad Syathiby - https://al-umm.syathiby.id](https://al-umm.syathiby.id)
+
+<div align="center" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
+  <br>
+  <img src="https://raw.githubusercontent.com/CreatorB/flutter-syathiby/main/demo/web-login.png" alt="Web Login" style="max-width: 250px; height: 250px;">
+  <img src="https://raw.githubusercontent.com/CreatorB/flutter-syathiby/main/demo/web-tapping.png" alt="Web Tapping" style="max-width: 250px; height: 250px;">
+  <br>
+</div>
 
 ## ✨ Key Features
 
