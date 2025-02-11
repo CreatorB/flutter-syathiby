@@ -9,75 +9,80 @@ import 'package:syathiby/features/profile/model/user_model.dart';
 import 'package:syathiby/features/profile/service/user_service.dart';
 
 class LoginBloc extends Bloc<LoginEvent, LoginState> {
- final UserService userService;
+  final UserService userService;
 
- LoginBloc({required this.userService}) : super(const LoginInitial()) {
-   on<LoginButtonPressed>((event, emit) async {
-     emit(const LoginLoading());
-     try {
-       final loginResponse = await userService.login(
-         email: event.email, 
-         password: event.password
-       );
+  LoginBloc({required this.userService}) : super(const LoginInitial()) {
+    on<LoginButtonPressed>((event, emit) async {
+      emit(const LoginLoading());
+      try {
+        final loginResponse = await userService.login(
+            email: event.email, password: event.password);
+        LoggerUtil.debug(
+            'Login response received: ${loginResponse.statusCode}');
+        LoggerUtil.debug('Login data: ${loginResponse.data}');
 
-       LoggerUtil.debug('Login response received: ${loginResponse.statusCode}');
-       LoggerUtil.debug('Login data: ${loginResponse.data}');
+        if (loginResponse.statusCode == 200 && loginResponse.data != null) {
+          final userData = loginResponse.data['user'];
+          final token = loginResponse.data['token'];
 
-       if (loginResponse.statusCode == 200 && loginResponse.data != null) {
-         final userData = loginResponse.data['user'];
-         final token = loginResponse.data['token'];
-         if (userData != null && token != null) {
-           await userService.saveAuthTokenToSP(token);
-           final user = UserModel.fromMap(userData);
-           
-           emit(LoginSuccess(
-             user: user,
-             message: loginResponse.message ?? 'Login successful'
-           ));
-         } else {
-           emit(const LoginFailed(
-             message: 'Invalid response data',
-             statusCode: 400
-           ));
-         }
-       } else {
-         emit(LoginFailed(
-           message: loginResponse.message ?? 'Login failed',
-           statusCode: loginResponse.statusCode
-         ));
-       }
-     } catch (e, stack) {
-       LoggerUtil.error('Login failed', e, stack);
-       emit(const LoginFailed(
-         message: 'Error occurred during login',
-         statusCode: 500
-       ));
-     }
-   });
+          if (userData != null && token != null) {
+            // Ensure all required fields are present
+            if (userData['id'] == null ||
+                userData['uuid'] == null ||
+                userData['name'] == null ||
+                userData['email'] == null ||
+                userData['nip'] == null ||
+                userData['working_days'] == null ||
+                userData['jumlah_cuti'] == null ||
+                userData['status'] == null) {
+              emit(const LoginFailed(
+                  message: 'Incomplete user data', statusCode: 400));
+              return;
+            }
 
-   on<LogoutButtonPressed>((event, emit) async {
-     await userService.deleteAuthTokenFromSP();
-     emit(const LoginInitial());
-   });
+            await userService.saveAuthTokenToSP(token);
+            final user = UserModel.fromMap(userData);
 
-   on<UpdatePasswordButtonPressed>((event, emit) async {
-     emit(const LoginLoading());
-     try {
-       final response = await userService.updatePassword(
-         userId: event.userId,
-         password: event.password
-       );
+            emit(LoginSuccess(
+                user: user,
+                message: loginResponse.message ?? 'Login successful'));
+          } else {
+            emit(const LoginFailed(
+                message: 'Invalid response data', statusCode: 400));
+          }
+        } else {
+          emit(LoginFailed(
+              message: loginResponse.message ?? 'Login failed',
+              statusCode: loginResponse.statusCode));
+        }
+      } catch (e, stack) {
+        LoggerUtil.error('Login failed', e, stack);
+        emit(const LoginFailed(
+            message: 'Error occurred during login', statusCode: 500));
+      }
+    });
 
-       if (response.statusCode == 200) {
-        //  emit(UpdatePasswordSuccess(message: response.message));
-       } else {
-        //  emit(UpdatePasswordFailed(message: response.message));
-       }
-     } catch (e) {
-      //  emit(UpdatePasswordFailed(message: e.toString()));
-     }
-   });
+    on<LogoutButtonPressed>((event, emit) async {
+      await userService.deleteAuthTokenFromSP();
+      emit(const LoginInitial());
+    });
 
-   on<ClearLoginData>((event, emit) => emit(const LoginInitial()));
- }
+    on<UpdatePasswordButtonPressed>((event, emit) async {
+      emit(const LoginLoading());
+      try {
+        final response = await userService.updatePassword(
+            userId: event.userId, password: event.password);
+
+        if (response.statusCode == 200) {
+          //  emit(UpdatePasswordSuccess(message: response.message));
+        } else {
+          //  emit(UpdatePasswordFailed(message: response.message));
+        }
+      } catch (e) {
+        //  emit(UpdatePasswordFailed(message: e.toString()));
+      }
+    });
+
+    on<ClearLoginData>((event, emit) => emit(const LoginInitial()));
+  }
 }
