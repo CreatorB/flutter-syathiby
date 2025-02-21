@@ -391,6 +391,7 @@ class _HomeViewState extends State<HomeView> {
         ),
         // Today's Attendance
         if (_todayAttendance != null)
+          if (_todayAttendance!['status'] != null)
           Container(
             margin: const EdgeInsets.only(bottom: 20),
             padding: const EdgeInsets.all(20),
