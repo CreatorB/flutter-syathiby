@@ -22,6 +22,7 @@ import 'package:syathiby/features/settings/widget/list_section_widet.dart';
 import 'package:syathiby/features/settings/widget/list_tile_widget.dart';
 import 'package:syathiby/common/widgets/custom_scaffold.dart';
 import 'package:syathiby/common/widgets/unauthenticated_user_widget.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 part "settings_view_mixin.dart";
 
 class SettingsView extends StatefulWidget {
@@ -32,6 +33,21 @@ class SettingsView extends StatefulWidget {
 }
 
 class _SettingsViewState extends State<SettingsView> with SettingsViewMixin {
+  String _appVersion = "Loading...";
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAppVersion();
+  }
+
+  Future<void> _loadAppVersion() async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    setState(() {
+      _appVersion = "v${packageInfo.version}";
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final LoginBloc loginBloc = BlocProvider.of<LoginBloc>(context);
@@ -62,8 +78,10 @@ class _SettingsViewState extends State<SettingsView> with SettingsViewMixin {
                                     },
                                     padding: const EdgeInsets.all(10),
                                     backgroundColorActivated: themeState.isDark
-                                        ? ColorConstants.darkBackgroundColorActivated
-                                        : ColorConstants.lightBackgroundColorActivated,
+                                        ? ColorConstants
+                                            .darkBackgroundColorActivated
+                                        : ColorConstants
+                                            .lightBackgroundColorActivated,
                                     title: Text(
                                       "${profileState.user?.name}",
                                       style: const TextStyle(
@@ -73,7 +91,8 @@ class _SettingsViewState extends State<SettingsView> with SettingsViewMixin {
                                     ),
                                     subtitle: Text(profileState.user!.email),
                                     leadingSize: UIHelper.deviceWidth * 0.12,
-                                    leading: ProfilePhotoWidget(imageUrl: profileState.user!.photoUrl),
+                                    leading: ProfilePhotoWidget(
+                                        imageUrl: profileState.user!.photoUrl),
                                     trailing: Icon(
                                       CupertinoIcons.forward,
                                       color: themeState.isDark
@@ -85,7 +104,7 @@ class _SettingsViewState extends State<SettingsView> with SettingsViewMixin {
                                     leadingIcon: CupertinoIcons.calendar_today,
                                     leadingColor: CupertinoColors.systemCyan,
                                     title:
-                                        "${LocaleKeys.you_joined_on_prefix.tr()}${AppConstants.dateformat.format(profileState.user!.createdAt)}${LocaleKeys.you_joined_on_suffix.tr()}",
+                                        "${LocaleKeys.you_joined_on_prefix.tr()}${AppConstants.dateformat.format(profileState.user!.createdAt)}${LocaleKeys.you_joined_on_suffix.tr()} ($_appVersion)",
                                     titleTextStyle: TextStyle(
                                         color: themeState.isDark
                                             ? ColorConstants.darkInactive

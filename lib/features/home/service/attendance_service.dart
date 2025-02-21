@@ -119,12 +119,18 @@ class AttendanceService {
             }).join(', ')
           }));
 
+      if (response.statusCode != 200) {
+        throw Exception(jsonDecode(response.body)['message'] ??
+            'Verify checking here failed');
+      }
+
       return HttpResponseModel(
           statusCode: response.statusCode,
           data: jsonDecode(response.body)['data'],
           message: jsonDecode(response.body)['message']);
     } catch (e) {
-      return HttpResponseModel(statusCode: 500, message: e.toString());
+      // return HttpResponseModel(statusCode: 500, message: e.toString());
+      throw Exception(e);
     }
   }
 
@@ -165,12 +171,18 @@ class AttendanceService {
             }).join(', ')
           }));
 
+      if (response.statusCode != 200) {
+        throw Exception(jsonDecode(response.body)['message'] ??
+            'Verify checking here failed');
+      }
+
       return HttpResponseModel(
           statusCode: response.statusCode,
           data: jsonDecode(response.body)['data'],
           message: jsonDecode(response.body)['message']);
     } catch (e) {
-      return HttpResponseModel(statusCode: 500, message: e.toString());
+      // return HttpResponseModel(statusCode: 500, message: e.toString());
+      throw Exception(e);
     }
   }
 }
