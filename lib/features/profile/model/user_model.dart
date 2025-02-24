@@ -47,7 +47,7 @@ class UserModel {
   final String email;
   final String? emailVerifiedAt;
   final String? photo;
-  final int? gender;
+  final String? gender;
   final String? phone;
   final String nip;
   final int workingDays;
@@ -157,7 +157,7 @@ class UserModel {
       email: map['email'] as String,
       emailVerifiedAt: map['email_verified_at'] as String?,
       photo: map['photo'] as String?,
-      gender: map['gender'] as int?,
+      gender: map['gender'] as String?,
       phone: map['phone'] as String?,
       nip: map['nip'] as String,
       workingDays: map['working_days'] as int,

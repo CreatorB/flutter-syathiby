@@ -50,7 +50,7 @@
  "user_exists_message": "Sudah ada pengguna untuk alamat email ini!",
  "non_existent_user": "Pengguna tidak ditemukan!",
  "non_existent_user_message": "Tidak ditemukan pengguna untuk alamat email ini!",
- "check_your_information": "Mohon periksa informasi Anda!",
+ "check_your_information": "Mohon periksa informasi anda.",
  "wrong_code": "Kode yang Anda masukkan salah!",
  "enter_valid_email": "Harap masukkan alamat email yang valid!",
  "enter_valid_password": "Kata sandi harus minimal 8 karakter dan terdiri dari huruf besar, huruf kecil dan angka!",

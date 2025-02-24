@@ -57,8 +57,10 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         }
       } catch (e, stack) {
         LoggerUtil.error('Login failed', e, stack);
-        emit(const LoginFailed(
-            message: 'Error occurred during login', statusCode: 500));
+        emit(LoginFailed(
+          message: 'Error: ${e.toString()}',
+          statusCode: 500,
+        ));
       }
     });
 
