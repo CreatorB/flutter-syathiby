@@ -61,11 +61,11 @@ class UserModel {
   final String? gelar;
   final String? jurusan;
   final String? sekolahUniversitas;
-  final String? tahunLulus1;
+  final int? tahunLulus1;
   final String? pendidikan2;
   final String? jurusanPendidikan2;
   final String? sekolahUniversitas2;
-  final String? tahunLulus2;
+  final int? tahunLulus2;
   final String? alamat;
   final String? alamatEmail;
   final String? typePegawai;
@@ -79,7 +79,7 @@ class UserModel {
   final String? kontrakSelesai1;
   final String? kontrakMulai2;
   final String? kontrakSelesai2;
-  final String? gajiPokok;
+  final int? gajiPokok;
   final String? ptt;
   final String? tJabatan;
   final String? tKehadiran;
@@ -171,11 +171,11 @@ class UserModel {
       gelar: map['gelar'] as String?,
       jurusan: map['jurusan'] as String?,
       sekolahUniversitas: map['sekolah_universitas'] as String?,
-      tahunLulus1: map['tahun_lulus_1'] as String?,
+      tahunLulus1: map['tahun_lulus_1'] as int?,
       pendidikan2: map['pendidikan_2'] as String?,
       jurusanPendidikan2: map['jurusan_pendidikan_2'] as String?,
       sekolahUniversitas2: map['sekolah_universitas_2'] as String?,
-      tahunLulus2: map['tahun_lulus_2'] as String?,
+      tahunLulus2: map['tahun_lulus_2'] as int?,
       alamat: map['alamat'] as String?,
       alamatEmail: map['alamat_email'] as String?,
       typePegawai: map['type_pegawai'] as String?,
@@ -189,7 +189,7 @@ class UserModel {
       kontrakSelesai1: map['kontrak_selesai_1'] as String?,
       kontrakMulai2: map['kontrak_mulai_2'] as String?,
       kontrakSelesai2: map['kontrak_selesai_2'] as String?,
-      gajiPokok: map['gaji_pokok'] as String?,
+      gajiPokok: map['gaji_pokok'] as int?,
       ptt: map['ptt'] as String?,
       tJabatan: map['t_jabatan'] as String?,
       tKehadiran: map['t_kehadiran'] as String?,

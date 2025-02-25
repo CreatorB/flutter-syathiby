@@ -4,33 +4,46 @@ import 'package:syathiby/features/profile/model/user_model.dart';
 class RegisterState extends Equatable {
   final String? message;
   final bool isLoading;
-  final bool? data;
+  final dynamic data;
   const RegisterState({this.message, this.isLoading = false, this.data});
 
   @override
-  List<Object?> get props => [message, isLoading];
+  List<Object?> get props => [isLoading, message, data];
 }
 
 class RegisterSuccess extends RegisterState {
-  final UserModel user;
-  const RegisterSuccess({required this.user, super.message, super.isLoading});
+  final dynamic data;
+  final String message;
+
+  const RegisterSuccess({
+    required this.message,
+    required bool isLoading,
+    this.data,
+  }) : super(isLoading: isLoading);
 
   @override
-  List<Object?> get props => [user, message, isLoading];
+  List<Object?> get props => [isLoading, message, data];
 }
 
 class RegisterFailed extends RegisterState {
-  const RegisterFailed({super.message, super.isLoading});
+  final String? message;
+
+  const RegisterFailed({
+    required bool isLoading,
+    this.message,
+  }) : super(isLoading: isLoading);
 
   @override
-  List<Object?> get props => [message, isLoading];
+  List<Object?> get props => [isLoading, message];
 }
 
 class CheckSuccess extends RegisterState {
+  final String name;
   final String email;
   final String password;
   final int? verificationCode;
   const CheckSuccess({
+    required this.name,
     required this.email,
     required this.password,
     this.verificationCode,

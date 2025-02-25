@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 import 'package:syathiby/core/interfaces/user_interface.dart';
 import 'package:syathiby/core/models/http_response_model.dart';
@@ -9,6 +10,7 @@ import 'package:syathiby/features/profile/model/user_model.dart';
 
 class UserService extends UserInterface {
   final String _baseUrl = dotenv.env['BASE_URL'] ?? "";
+  final dio = Dio();
 
   @override
   Future<HttpResponseModel> login(
@@ -46,7 +48,7 @@ class UserService extends UserInterface {
 
       return HttpResponseModel(
         statusCode: response.statusCode,
-        message: 'Login failed',
+        message: jsonDecode(response.body)["message"],
       );
     } catch (e, stackTrace) {
       LoggerUtil.error('Login error', e, stackTrace);
@@ -91,26 +93,44 @@ class UserService extends UserInterface {
   }
 
   @override
-  Future<HttpResponseModel> create(
-      {required String email, required String password}) async {
+  Future<HttpResponseModel<dynamic>> create({
+    required String name,
+    required String email,
+    required String password,
+  }) async {
     try {
-      var url = Uri.parse('$_baseUrl/users');
-      var response = await http.post(
-        url,
-        body: jsonEncode({
+      final response = await dio.post(
+        '$_baseUrl/signup',
+        data: {
+          'name': name,
           'email': email,
           'password': password,
-        }),
+        },
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+        ),
       );
 
       return HttpResponseModel(
-        statusCode: response.statusCode,
-        data: jsonDecode(response.body)["data"],
-        message: jsonDecode(response.body)["message"],
+        statusCode: response.statusCode ?? 500,
+        message: response.data['message'] ?? '',
+        data: response.data['data'],
       );
-    } catch (e) {
+    } on DioException catch (e) {
+      if (e.response != null) {
+        return HttpResponseModel(
+          statusCode: e.response?.statusCode ?? 500,
+          message: e.response?.data['message'] ?? 'Server error',
+          data: e.response?.data['data'],
+        );
+      }
       return HttpResponseModel(
-        message: 'An error occurred: $e',
+        statusCode: 500,
+        message: 'Connection error',
+        data: null,
       );
     }
   }

@@ -17,10 +17,10 @@ mixin VerifyViewMixin on State<VerifyView> {
   }
 
   void _listener(RegisterState state) {
-    final ProfileBloc profileBloc = BlocProvider.of<ProfileBloc>(context);
+    // final ProfileBloc profileBloc = BlocProvider.of<ProfileBloc>(context);
     if (state is RegisterSuccess) {
-      profileBloc.add(SetUser(user: state.user));
-      context.go(Routes.initial.path);
+      // profileBloc.add(SetUser(user: state.user));
+      context.go(Routes.login.path);
     } else if (state is RegisterFailed) {
       AppHelper.showErrorMessage(context: context, content: LocaleKeys.something_went_wrong.tr());
     }
@@ -31,6 +31,7 @@ mixin VerifyViewMixin on State<VerifyView> {
       if (registerState.verificationCode.toString() == _verificationCodeTextEditingController.text) {
         registerBloc.add(
           RegisterButtonPressed(
+            name: registerState.name,
             email: registerState.email,
             password: registerState.password,
           ),

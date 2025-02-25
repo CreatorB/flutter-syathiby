@@ -55,6 +55,14 @@ class _RegisterViewState extends State<RegisterView> with RegisterViewMixin {
                                 const TitleWidget(),
                                 const SizedBox(height: 20),
                                 CustomTextField(
+                                  textEditingController: _nameTextEditingController,
+                                  placeholder: LocaleKeys.name.tr(),
+                                  prefixIcon: CupertinoIcons.person,
+                                  enabled: !state.isLoading,
+                                  keyboardType: TextInputType.name,
+                                ),
+                                const SizedBox(height: 10),
+                                CustomTextField(
                                   textEditingController: _emailTextEditingController,
                                   placeholder: LocaleKeys.email.tr(),
                                   prefixIcon: CupertinoIcons.mail,

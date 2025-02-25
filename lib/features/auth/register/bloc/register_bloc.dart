@@ -14,94 +14,31 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
     on<RegisterButtonPressed>((event, emit) async {
       emit(const RegisterState(isLoading: true));
       try {
-        HttpResponseModel<dynamic> registerResponse =
-            await userService.create(email: event.email, password: event.password);
-        if (registerResponse.data != null) {
-          HttpResponseModel<dynamic> loginResponse =
-              await userService.login(email: event.email, password: event.password);
-          if (loginResponse.data != null) {
-            HttpResponseModel<dynamic> validateResponse = await userService.validate(token: loginResponse.data);
-            await userService.saveAuthTokenToSP(loginResponse.data);
-            final user = UserModel.fromMap(validateResponse.data);
-            emit(RegisterSuccess(user: user, message: validateResponse.message, isLoading: false));
-          } else {
-            emit(RegisterState(isLoading: false, message: loginResponse.message));
-          }
+        HttpResponseModel<dynamic> registerResponse = await userService.create(
+          name: event.name,
+          email: event.email,
+          password: event.password,
+        );
+
+        // Debug response
+        print('Register Response in Bloc: ${registerResponse.toString()}');
+
+        if (registerResponse.statusCode == 200 ||
+            registerResponse.statusCode == 201) {
+          emit(RegisterSuccess(
+              message: registerResponse.message ?? LocaleKeys.transaction_successful_subject.tr(),
+              isLoading: false,
+              data: registerResponse.data));
         } else {
-          emit(RegisterState(isLoading: false, message: registerResponse.message));
+          emit(RegisterFailed(
+              message: registerResponse.message, isLoading: false));
         }
       } catch (error) {
-        emit(RegisterFailed(message: error.toString(), isLoading: false));
+        print('Register Error: ${error.toString()}');
+        emit(RegisterFailed(
+            message: 'Registration failed: ${error.toString()}',
+            isLoading: false));
       }
-    });
-
-    on<CheckButtonPressed>((event, emit) async {
-      emit(const RegisterState(isLoading: true));
-      try {
-        HttpResponseModel<dynamic> checkResponse = await userService.check(email: event.email);
-        if (checkResponse.data != null) {
-          if (!checkResponse.data) {
-            int? verificationCode = 0;
-            emit(
-              CheckSuccess(
-                email: event.email,
-                password: event.password,
-                verificationCode: verificationCode,
-                isLoading: false,
-                message: checkResponse.message,
-                data: checkResponse.data,
-              ),
-            );
-          } else {
-            emit(
-              CheckSuccess(
-                email: event.email,
-                password: event.password,
-                isLoading: false,
-                data: checkResponse.data,
-                message: checkResponse.message,
-              ),
-            );
-          }
-        }
-      } catch (error) {
-        emit(CheckFailed(message: error.toString(), isLoading: false, data: null));
-      }
-    });
-
-    on<ForgotPasswordButtonPressed>((event, emit) async {
-      emit(const RegisterState(isLoading: true));
-      try {
-        HttpResponseModel<dynamic> checkResponse = await userService.check(email: event.email);
-        if (checkResponse.data != null) {
-          if (checkResponse.data) {
-            int? verificationCode = 0;
-            emit(
-              ForgotPasswordCheckSuccess(
-                email: event.email,
-                verificationCode: verificationCode,
-                isLoading: false,
-                data: checkResponse.data,
-                message: checkResponse.message,
-              ),
-            );
-          } else {
-            emit(
-              ForgotPasswordCheckFailed(
-                message: checkResponse.message,
-                isLoading: false,
-                data: checkResponse.data,
-              ),
-            );
-          }
-        }
-      } catch (error) {
-        emit(CheckFailed(message: error.toString(), isLoading: false, data: null));
-      }
-    });
-
-    on<ClearRegisterData>((event, emit) async {
-      emit(const RegisterState());
     });
   }
 }

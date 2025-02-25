@@ -60,7 +60,7 @@ void _listener(LoginState state) {
     if (state.statusCode == 401) {
       AppHelper.showErrorMessage(
         context: context, 
-        content: LocaleKeys.check_your_information.tr()
+        content: state.message ?? LocaleKeys.check_your_information.tr()
       );
     } else {
       AppHelper.showErrorMessage(
