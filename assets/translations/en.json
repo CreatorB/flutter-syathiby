@@ -65,5 +65,8 @@
     "password_update_successful_text": "Your app password has been successfully updated.",
     "transaction_has_been_canceled": "Your transaction has been canceled because you made too many incorrect entries!",
     "session_terminated": "Session terminated!",
-    "forgot_password_text": "Enter the e-mail address assigned to the account whose password you forgot."
+    "forgot_password_text": "Enter the e-mail address assigned to the account whose password you forgot.",
+    "remember_me": "Save credentials on this device",
+    "are_you_sure_to_check_in_right_now" : "Are you sure you want to check-in right now?",
+    "are_you_sure_to_check_out_right_now" : "Are you sure you want to check-out right now?"
 }

@@ -3,12 +3,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:syathiby/core/services/shared_preferences_service.dart';
 import 'package:syathiby/core/utils/logger_util.dart';
 import 'package:syathiby/core/utils/router/routes.dart';
 import 'package:syathiby/features/auth/login/bloc/login_bloc.dart';
 import 'package:syathiby/features/auth/login/bloc/login_event.dart';
 import 'package:syathiby/features/auth/login/bloc/login_state.dart';
-import 'package:syathiby/features/auth/login/service/login_service.dart';
 import 'package:syathiby/features/auth/register/bloc/register_state.dart';
 import 'package:syathiby/features/profile/bloc/profile_bloc.dart';
 import 'package:syathiby/features/profile/bloc/profile_event.dart';
@@ -93,6 +93,31 @@ class _LoginViewState extends State<LoginView> with LoginViewMixin {
                                   ),
                                   obscureText: true,
                                   prefixIcon: CupertinoIcons.lock,
+                                ),
+                                const SizedBox(height: 10),
+                                Row(
+                                  children: [
+                                    CupertinoCheckbox(
+                                      value: _rememberMe,
+                                      onChanged: (bool? value) {
+                                        setState(() {
+                                          _rememberMe = value ?? false;
+                                        });
+                                      },
+                                      activeColor: themeState.isDark
+                                          ? ColorConstants.darkPrimaryColor
+                                          : ColorConstants.lightPrimaryColor,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      LocaleKeys.remember_me.tr(),
+                                      style: TextStyle(
+                                        color: themeState.isDark
+                                            ? ColorConstants.lightItem
+                                            : ColorConstants.darkItem,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                                 const SizedBox(height: 10),
                                 LoginButton(

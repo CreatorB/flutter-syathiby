@@ -261,6 +261,31 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Future<void> _handleAttendance() async {
+    bool? confirm = await showCupertinoDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return CupertinoAlertDialog(
+          title: Text(_canCheckIn ? 'Check In' : 'Check Out'),
+          content: Text(_canCheckIn
+              ? LocaleKeys.are_you_sure_to_check_in_right_now.tr()
+              : LocaleKeys.are_you_sure_to_check_out_right_now.tr()),
+          actions: [
+            CupertinoDialogAction(
+              child: const Text(LocaleKeys.cancel),
+              onPressed: () => Navigator.pop(context, false),
+            ),
+            CupertinoDialogAction(
+              isDefaultAction: true,
+              child: const Text(LocaleKeys.yes),
+              onPressed: () => Navigator.pop(context, true),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm != true) return;
+
     setState(() {
       _isLoading = true;
     });
@@ -336,7 +361,7 @@ class _HomeViewState extends State<HomeView> {
           padding: const EdgeInsets.all(20),
           width: UIHelper.deviceWidth,
           decoration: BoxDecoration(
-            color: ColorConstants.lightPrimaryIcon,
+            color: ColorConstants.lightPrimaryColor,
             borderRadius: BorderRadius.circular(10),
           ),
           child: Column(
@@ -392,52 +417,52 @@ class _HomeViewState extends State<HomeView> {
         // Today's Attendance
         if (_todayAttendance != null)
           if (_todayAttendance!['status'] != null)
-          Container(
-            margin: const EdgeInsets.only(bottom: 20),
-            padding: const EdgeInsets.all(20),
-            width: UIHelper.deviceWidth,
-            decoration: BoxDecoration(
-              color: ColorConstants.lightPrimaryIcon,
-              borderRadius: BorderRadius.circular(10),
+            Container(
+              margin: const EdgeInsets.only(bottom: 20),
+              padding: const EdgeInsets.all(20),
+              width: UIHelper.deviceWidth,
+              decoration: BoxDecoration(
+                color: ColorConstants.darkPrimaryColor,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Today\'s Attendance',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: Colors.white,
+                          )),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Check In: ${_todayAttendance!['check_in'] != null ? DateFormat('EEEE, dd MMMM yyyy - HH:mm', 'id_ID').format(DateTime.parse(_todayAttendance!['check_in']).toLocal()) : 'Not yet'}',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(color: Colors.white),
+                  ),
+                  Text(
+                    'Check Out: ${_todayAttendance!['check_out'] != null ? DateFormat('EEEE, dd MMMM yyyy - HH:mm', 'id_ID').format(DateTime.parse(_todayAttendance!['check_out']).toLocal()) : 'Not yet'}',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(color: Colors.white),
+                  ),
+                  Text(
+                    'Status: ${_todayAttendance!['status']}',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(color: Colors.white),
+                  ),
+                  if (_todayAttendance!['late'] == true)
+                    const Text('Status: Late',
+                        style: TextStyle(color: Colors.red)),
+                  if (_todayAttendance!['is_overtime'] == true)
+                    const Text('Status: Overtime',
+                        style: TextStyle(color: Colors.orange)),
+                ],
+              ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Today\'s Attendance',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Colors.white,
-                        )),
-                const SizedBox(height: 10),
-                Text(
-                  'Check In: ${_todayAttendance!['check_in'] != null ? DateFormat('EEEE, dd MMMM yyyy - HH:mm', 'id_ID').format(DateTime.parse(_todayAttendance!['check_in']).toLocal()) : 'Not yet'}',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(color: Colors.white),
-                ),
-                Text(
-                  'Check Out: ${_todayAttendance!['check_out'] != null ? DateFormat('EEEE, dd MMMM yyyy - HH:mm', 'id_ID').format(DateTime.parse(_todayAttendance!['check_out']).toLocal()) : 'Not yet'}',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(color: Colors.white),
-                ),
-                Text(
-                  'Status: ${_todayAttendance!['status']}',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(color: Colors.white),
-                ),
-                if (_todayAttendance!['late'] == true)
-                  const Text('Status: Late',
-                      style: TextStyle(color: Colors.red)),
-                if (_todayAttendance!['is_overtime'] == true)
-                  const Text('Status: Overtime',
-                      style: TextStyle(color: Colors.orange)),
-              ],
-            ),
-          ),
 
         // News Section Header
         Container(

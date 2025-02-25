@@ -65,5 +65,8 @@
   "password_update_successful_text": "Kata sandi aplikasi Anda telah berhasil diperbarui.",
   "transaction_has_been_canceled": "Transaksi Anda telah dibatalkan karena terlalu banyak entri yang salah!",
   "session_terminated": "Sesi berakhir!",
-  "forgot_password_text": "Masukkan alamat email yang terkait dengan akun yang kata sandinya Anda lupa."
+  "forgot_password_text": "Masukkan alamat email yang terkait dengan akun yang kata sandinya Anda lupa.",
+  "remember_me": "Simpan kredensial di perangkat ini",
+  "are_you_sure_to_check_in_right_now": "Apakah Anda yakin ingin check-in sekarang?",
+  "are_you_sure_to_check_out_right_now": "Apakah Anda yakin ingin check-out sekarang?"
 }

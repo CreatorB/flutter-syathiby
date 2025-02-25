@@ -73,4 +73,7 @@ abstract class LocaleKeys {
   static const forgot_password_text = 'forgot_password_text';
   static const String name = 'name';
   static const String name_required = 'name_is_required';
+  static const String remember_me = 'remember_me';
+  static const String are_you_sure_to_check_in_right_now = 'are_you_sure_to_check_in_right_now';
+  static const String are_you_sure_to_check_out_right_now = 'are_you_sure_to_check_out_right_now';
 }
