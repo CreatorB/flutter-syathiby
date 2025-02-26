@@ -1,8 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:syathiby/features/profile/model/user_model.dart';
 
-import '../../../profile/model/user_model.dart';
-
 abstract class LoginState extends Equatable {
   final String? message;
   final bool isLoading;

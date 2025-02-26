@@ -1,4 +1,6 @@
 {
+    "name": "Name",
+    "name_is_required": "Name is required",
     "email": "Email",
     "password": "Password",
     "login": "Log in",
@@ -53,15 +55,18 @@
     "check_your_information": "Please check your information!",
     "wrong_code": "You entered the wrong code!",
     "enter_valid_email": "Please enter a valid email address!",
-    "enter_valid_password": "Your password must contain at least 8 characters and consist of uppercase letters, lowercase letters and numbers!",
+    "enter_valid_password": "Your password must contain at least 8 characters!",
     "welcome_subject": "🖐🏻 Hi there!",
-    "welcome_text": "Thank you for registering to our application. We were happy to have you among us 🥳",
+    "welcome_text": "Thank you for registering to our application. We were happy to have you among us :)",
     "update": "Update",
     "forgot_password": "Forgot Password",
     "new_password": "New Password",
-    "transaction_successful_subject": "Transaction Successful!",
+    "transaction_successful_subject": "Successful!",
     "password_update_successful_text": "Your app password has been successfully updated.",
     "transaction_has_been_canceled": "Your transaction has been canceled because you made too many incorrect entries!",
     "session_terminated": "Session terminated!",
-    "forgot_password_text": "Enter the e-mail address assigned to the account whose password you forgot."
+    "forgot_password_text": "Enter the e-mail address assigned to the account whose password you forgot.",
+    "remember_me": "Save credentials on this device",
+    "are_you_sure_to_check_in_right_now" : "Are you sure you want to check-in right now?",
+    "are_you_sure_to_check_out_right_now" : "Are you sure you want to check-out right now?"
 }

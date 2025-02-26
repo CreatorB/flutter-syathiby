@@ -16,19 +16,43 @@ import 'package:uuid/uuid.dart';
 import 'package:gal/gal.dart';
 
 class AppHelper {
-  static HttpResponseModel checkEmailAndPassword({required String email, required String password}) {
+  static HttpResponseModel checkRegisterForm(
+      {required String name, required String email, required String password}) {
     if (!AppConstants.emailRegex.hasMatch(email)) {
-      return HttpResponseModel(statusCode: 401, message: LocaleKeys.enter_valid_email.tr());
+      return HttpResponseModel(
+          statusCode: 401, message: LocaleKeys.enter_valid_email.tr());
+    }
+    if (name.isEmpty) {
+      return HttpResponseModel(
+          statusCode: 401, message: LocaleKeys.please_fill_in_all_fields.tr());
+    }
+    if (password.length < 8) {
+      return HttpResponseModel(
+          statusCode: 401, message: LocaleKeys.enter_valid_password.tr());
+    }
+    return HttpResponseModel(statusCode: 200);
+  }
+
+  static HttpResponseModel checkEmailAndPassword(
+      {required String email, required String password}) {
+    if (!AppConstants.emailRegex.hasMatch(email)) {
+      return HttpResponseModel(
+          statusCode: 401, message: LocaleKeys.enter_valid_email.tr());
     }
     // if (!AppConstants.passwordRegex.hasMatch(password)) {
     //   return HttpResponseModel(statusCode: 401, message: LocaleKeys.enter_valid_password.tr());
     // }
+    if (password.length < 8) {
+      return HttpResponseModel(
+          statusCode: 401, message: LocaleKeys.enter_valid_password.tr());
+    }
     return HttpResponseModel(statusCode: 200);
   }
 
   static HttpResponseModel checkEmail({required String email}) {
     if (!AppConstants.emailRegex.hasMatch(email)) {
-      return HttpResponseModel(statusCode: 401, message: LocaleKeys.enter_valid_email.tr());
+      return HttpResponseModel(
+          statusCode: 401, message: LocaleKeys.enter_valid_email.tr());
     }
     return HttpResponseModel(statusCode: 200);
   }
@@ -37,7 +61,43 @@ class AppHelper {
     // if (!AppConstants.passwordRegex.hasMatch(password)) {
     //   return HttpResponseModel(statusCode: 401, message: LocaleKeys.enter_valid_password.tr());
     // }
+    if (password.length < 8) {
+      return HttpResponseModel(
+          statusCode: 401, message: LocaleKeys.enter_valid_password.tr());
+    }
     return HttpResponseModel(statusCode: 200);
+  }
+
+  static void showSuccessMessage(
+      {required BuildContext context,
+      String? title,
+      String? content,
+      void Function()? onPressed,
+      bool barrierDismissible = true}) {
+    showCupertinoDialog(
+      barrierDismissible: barrierDismissible,
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: title != null
+            ? Text(
+                title,
+                style: const TextStyle(color: CupertinoColors.systemGreen),
+              )
+            : null,
+        content: content != null
+            ? Text(
+                content,
+                textAlign: TextAlign.start,
+              )
+            : null,
+        actions: [
+          CupertinoDialogAction(
+            onPressed: onPressed ?? () => context.pop(),
+            child: const Text(LocaleKeys.ok).tr(),
+          )
+        ],
+      ),
+    );
   }
 
   static void showErrorMessage(
@@ -87,7 +147,8 @@ class AppHelper {
         }
         if (permissionStatus.isGranted) {
           try {
-            final image = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 100, maxWidth: 1920);
+            final image = await ImagePicker().pickImage(
+                source: ImageSource.gallery, imageQuality: 100, maxWidth: 1920);
             if (image == null) return null;
             final imageTemp = File(image.path);
             File? croppedImage = await cropImage(imageTemp);
@@ -103,7 +164,8 @@ class AppHelper {
       }
     } else if (Platform.isIOS) {
       try {
-        final image = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 100, maxWidth: 1920);
+        final image = await ImagePicker().pickImage(
+            source: ImageSource.gallery, imageQuality: 100, maxWidth: 1920);
         if (image == null) return null;
         final imageTemp = File(image.path);
         File? croppedImage = await cropImage(imageTemp);
@@ -123,7 +185,8 @@ class AppHelper {
         var permissionStatus = await Permission.camera.status;
         if (permissionStatus.isGranted) {
           try {
-            final image = await ImagePicker().pickImage(source: ImageSource.camera, imageQuality: 100, maxWidth: 1920);
+            final image = await ImagePicker().pickImage(
+                source: ImageSource.camera, imageQuality: 100, maxWidth: 1920);
             if (image == null) return null;
             final imageTemp = File(image.path);
             File? croppedImage = await cropImage(imageTemp);
@@ -139,7 +202,8 @@ class AppHelper {
       }
     } else if (Platform.isIOS) {
       try {
-        final image = await ImagePicker().pickImage(source: ImageSource.camera, imageQuality: 100, maxWidth: 1920);
+        final image = await ImagePicker().pickImage(
+            source: ImageSource.camera, imageQuality: 100, maxWidth: 1920);
         if (image == null) return null;
         final imageTemp = File(image.path);
         File? croppedImage = await cropImage(imageTemp);
@@ -181,7 +245,8 @@ class AppHelper {
       if (url == null) return;
       final response = await http.get(Uri.parse(url));
       final documentDirectory = await getApplicationDocumentsDirectory();
-      final File file = File('${documentDirectory.path}/${const Uuid().v1()}.jpg');
+      final File file =
+          File('${documentDirectory.path}/${const Uuid().v1()}.jpg');
       await file.writeAsBytes(response.bodyBytes);
       await Gal.putImage(file.path);
       await file.delete();

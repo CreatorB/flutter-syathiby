@@ -42,7 +42,11 @@ enum PreferenceKey {
   authToken("auth_token"),
   useDeviceTheme("use_device_theme"),
   isDark("is_dark"),
-  userData("user_data");
+  userData("user_data"),
+  rememberMe("remember_me"),     
+  savedEmail("saved_email"),     
+  savedPassword("saved_password")
+  ;
 
   const PreferenceKey(this.key);
   final String key;

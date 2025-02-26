@@ -10,10 +10,13 @@ class ColorConstants {
   static Color darkBottomSheetItem = const Color(0xFF2c2c2e);
   static Color lightBottomSheetItem = const Color(0xFFffffff);
 
-  // static Color darkPrimaryIcon = const Color(0xFF53a6fd);
-  // static Color lightPrimaryIcon = const Color(0xFF007bfc);
-  static Color darkPrimaryIcon = const Color(0xFF244030);
-  static Color lightPrimaryIcon = const Color(0xFF528b6a);
+  static Color darkPrimaryIcon = const Color(0xFF53a6fd);
+  static Color lightPrimaryIcon = const Color(0xFF007bfc);
+
+  static Color darkPrimaryColor = const Color(0xFF244030);
+  static Color lightPrimaryColor = const Color(0xFF528b6a);
+  static Color darkPrimaryText = const Color(0xFF244030);
+  static Color lightPrimaryText = const Color(0xFF528b6a);
 
   static Color darkSecondaryIcon = const Color(0xFF59595e);
   static Color lightSecondaryIcon = const Color(0xFFa4a4aa);
@@ -26,4 +29,8 @@ class ColorConstants {
 
   static Color darkBackgroundColorActivated = const Color(0xFF3a3a3c);
   static Color lightBackgroundColorActivated = const Color(0xFFd1d1d6);
+
+  // yellow warning
+  static Color darkWarningColor = const Color(0xFFf2c94c);
+  static Color lightWarningColor = const Color(0xFFFFEB55);
 }

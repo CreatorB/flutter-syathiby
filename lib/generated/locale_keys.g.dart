@@ -1,6 +1,6 @@
 // DO NOT EDIT. This is code generated via package:easy_localization/generate.dart
 
-abstract class  LocaleKeys {
+abstract class LocaleKeys {
   static const email = 'email';
   static const password = 'password';
   static const login = 'login';
@@ -43,9 +43,12 @@ abstract class  LocaleKeys {
   static const you_joined_on_prefix = 'you_joined_on_prefix';
   static const you_joined_on_suffix = 'you_joined_on_suffix';
   static const save_image = 'save_image';
-  static const enter_verification_code_prefix = 'enter_verification_code_prefix';
-  static const enter_verification_code_suffix = 'enter_verification_code_suffix';
-  static const verification_code_mail_subject = 'verification_code_mail_subject';
+  static const enter_verification_code_prefix =
+      'enter_verification_code_prefix';
+  static const enter_verification_code_suffix =
+      'enter_verification_code_suffix';
+  static const verification_code_mail_subject =
+      'verification_code_mail_subject';
   static const verification_code_mail_text = 'verification_code_mail_text';
   static const verification_code = 'verification_code';
   static const user_exists = 'user_exists';
@@ -61,10 +64,16 @@ abstract class  LocaleKeys {
   static const update = 'update';
   static const forgot_password = 'forgot_password';
   static const new_password = 'new_password';
-  static const transaction_successful_subject = 'transaction_successful_subject';
-  static const password_update_successful_text = 'password_update_successful_text';
+  static const transaction_successful_subject =
+      'transaction_successful_subject';
+  static const password_update_successful_text =
+      'password_update_successful_text';
   static const transaction_has_been_canceled = 'transaction_has_been_canceled';
   static const session_terminated = 'session_terminated';
   static const forgot_password_text = 'forgot_password_text';
-
+  static const String name = 'name';
+  static const String name_required = 'name_is_required';
+  static const String remember_me = 'remember_me';
+  static const String are_you_sure_to_check_in_right_now = 'are_you_sure_to_check_in_right_now';
+  static const String are_you_sure_to_check_out_right_now = 'are_you_sure_to_check_out_right_now';
 }
