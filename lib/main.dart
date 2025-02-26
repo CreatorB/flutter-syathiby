@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:syathiby/core/di/injection.dart';
 import 'package:syathiby/core/services/shared_preferences_service.dart';
 import 'package:syathiby/core/utils/bloc/custom_multi_bloc_provider.dart';
 import 'package:syathiby/core/utils/localization/localization_manager.dart';
@@ -16,6 +17,9 @@ import 'package:logger/logger.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load();
+  await setupLocator();
   LoggerUtil.init(
     Logger(
       printer: PrettyPrinter(

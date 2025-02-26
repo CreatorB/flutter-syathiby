@@ -29,4 +29,8 @@ class ColorConstants {
 
   static Color darkBackgroundColorActivated = const Color(0xFF3a3a3c);
   static Color lightBackgroundColorActivated = const Color(0xFFd1d1d6);
+
+  // yellow warning
+  static Color darkWarningColor = const Color(0xFFf2c94c);
+  static Color lightWarningColor = const Color(0xFFFFEB55);
 }

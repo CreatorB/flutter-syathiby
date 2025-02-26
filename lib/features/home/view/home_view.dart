@@ -1,8 +1,18 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:syathiby/common/helpers/app_helper.dart';
+import 'package:syathiby/core/di/injection.dart';
+import 'package:syathiby/core/services/shared_preferences_service.dart';
+import 'package:syathiby/core/utils/router/router_manager.dart';
+import 'package:syathiby/core/utils/router/routes.dart';
+import 'package:syathiby/features/announcement/cubit/announcement_cubit.dart';
+import 'package:syathiby/features/announcement/cubit/announcement_state.dart';
+import 'package:syathiby/features/announcement/widget/announcement_widget.dart';
 import 'dart:convert';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -14,6 +24,12 @@ import 'package:syathiby/common/widgets/custom_scaffold.dart';
 import 'package:syathiby/core/constants/color_constants.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:io';
+import 'package:go_router/go_router.dart';
+export 'package:syathiby/features/announcement/cubit/announcement_cubit.dart';
+export 'package:syathiby/features/announcement/cubit/announcement_state.dart';
+export 'package:syathiby/features/announcement/model/announcement_model.dart';
+export 'package:syathiby/features/announcement/service/announcement_service.dart';
+export 'package:syathiby/features/announcement/widget/announcement_widget.dart';
 
 class WordPressPost {
   final String title;
@@ -60,6 +76,21 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => sl<AnnouncementCubit>()..loadAnnouncements(),
+      child: HomeContent(),
+    );
+  }
+}
+
+class HomeContent extends StatefulWidget {
+  @override
+  State<HomeContent> createState() => _HomeContentState();
+}
+
+class _HomeContentState extends State<HomeContent> {
   final String _baseLocal = dotenv.env['BASE_LOCAL'] ?? "";
   final AttendanceService _attendanceService = AttendanceService();
   final List<WordPressPost> _posts = [];
@@ -350,11 +381,51 @@ class _HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     return CustomScaffold(
       onRefresh: () async {
+        await context.read<AnnouncementCubit>().loadAnnouncements();
         await _checkStatus();
         await _loadPosts();
       },
       title: LocaleKeys.home,
       children: [
+        // Announcements Section
+        BlocBuilder<AnnouncementCubit, AnnouncementState>(
+          builder: (context, state) {
+            if (state is AnnouncementLoading) {
+              return const Center(child: CupertinoActivityIndicator());
+            }
+
+            if (state is AnnouncementError) {
+              if (state.message.contains('unauthorized')) {
+                // Clear any stored data
+                SharedPreferencesService.instance
+                    .removeData(PreferenceKey.authToken);
+                SharedPreferencesService.instance
+                    .removeData(PreferenceKey.userData);
+
+                if (context.mounted) {
+                  // Replace current screen with login
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                      Routes.login.path,
+                      (route) => false // Hapus semua route sebelumnya
+                      );
+                }
+              }
+              return const SizedBox.shrink();
+            }
+
+            if (state is AnnouncementLoaded && state.announcements.isNotEmpty) {
+              return Column(
+                children: state.announcements
+                    .map((announcement) => AnnouncementWidget(
+                          announcement: announcement,
+                        ))
+                    .toList(),
+              );
+            }
+
+            return const SizedBox.shrink();
+          },
+        ),
         // Attendance Section
         Container(
           margin: const EdgeInsets.symmetric(vertical: 20),
