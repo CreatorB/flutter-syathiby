@@ -4,15 +4,18 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:syathiby/common/helpers/app_helper.dart';
 import 'package:syathiby/core/di/injection.dart';
+import 'package:syathiby/core/models/http_response_model.dart';
 import 'package:syathiby/core/services/shared_preferences_service.dart';
 import 'package:syathiby/core/utils/router/router_manager.dart';
 import 'package:syathiby/core/utils/router/routes.dart';
 import 'package:syathiby/features/announcement/cubit/announcement_cubit.dart';
 import 'package:syathiby/features/announcement/cubit/announcement_state.dart';
 import 'package:syathiby/features/announcement/widget/announcement_widget.dart';
+import 'package:syathiby/features/profile/service/user_service.dart';
 import 'dart:convert';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -101,13 +104,41 @@ class _HomeContentState extends State<HomeContent> {
   String _masehi = '';
   String _hijri = '';
   bool _isLoading = false;
+  bool _canCheckOut = false;
+  Map<String, dynamic>? _yesterdayIncomplete;
+  final ScrollController _scrollController = ScrollController();
+  final UserService _userService = UserService();
+  Map<String, dynamic>? userData; 
+  HttpResponseModel<dynamic>? apiResponse; 
+  late String _appVersion;
 
   @override
   void initState() {
     super.initState();
+    _loadData();
     _checkStatus();
     _loadDates();
     _loadPosts();
+  }
+
+  Future<void> _loadData() async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    String? authToken = await _userService.getAuthTokenFromSP();
+    if (authToken != null) {
+      final response = await _userService.getUserData(token: authToken);
+      setState(() {
+      _appVersion = "v${packageInfo.version}";
+        apiResponse = response; 
+        userData =
+            response.data is Map ? response.data as Map<String, dynamic> : null;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<String> _getHijriDate() async {
@@ -119,7 +150,6 @@ class _HomeContentState extends State<HomeContent> {
         final data = jsonDecode(response.body);
         final hijri = data['data']['hijri'];
 
-        // Get month name in English
         final monthName = hijri['month']['en'];
 
         return '${hijri['day']} $monthName ${hijri['year']} H';
@@ -170,6 +200,28 @@ class _HomeContentState extends State<HomeContent> {
     }
   }
 
+  void _showIncompleteAttendanceDialog() {
+    final date = _yesterdayIncomplete?['date'];
+    final checkIn = _yesterdayIncomplete?['check_in'];
+
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('Incomplete Attendance'),
+        content: Text(
+            'Anda memiliki absensi tanggal ${DateFormat('dd MMM yyyy').format(DateTime.parse(date))} '
+            'yang belum di-checkout (Check In: ${DateFormat('HH:mm').format(DateTime.parse(checkIn))}). '
+            'Silakan checkout terlebih dahulu sebelum melakukan check in hari ini.'),
+        actions: [
+          CupertinoDialogAction(
+            child: const Text('OK'),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _checkStatus() async {
     try {
       final response = await _attendanceService.getStatus();
@@ -177,49 +229,36 @@ class _HomeContentState extends State<HomeContent> {
 
       if (response.data != null) {
         setState(() {
-          // Explicitly convert to Map<String, dynamic>
           final Map<String, dynamic> responseData =
               Map<String, dynamic>.from(response.data);
 
-          // Safely check for today's attendance, providing a default empty map if null
-          final todayAttendance = responseData['today_attendance'] != null
+          _todayAttendance = responseData['today_attendance'] != null
               ? Map<String, dynamic>.from(responseData['today_attendance'])
-              : <String, dynamic>{};
+              : null;
 
-          // Use null-aware operators to safely access values
-          final checkIn = todayAttendance['check_in'];
-          final checkOut = todayAttendance['check_out'];
+          _yesterdayIncomplete = responseData['yesterday_incomplete'] != null
+              ? Map<String, dynamic>.from(responseData['yesterday_incomplete'])
+              : null;
 
-          // Jika belum check-out, maka tetap bisa check-out
-          if (checkIn != null && checkOut == null) {
-            _canCheckIn = false; // Sudah check-in
+          if (_yesterdayIncomplete != null) {
+            _canCheckIn = false;
+            _canCheckOut = true;
           } else {
-            // Jika sudah check-out atau belum check-in sama sekali
-            _canCheckIn = true;
+            _canCheckIn = responseData['can_check_in'] ?? false;
+            _canCheckOut = responseData['can_check_out'] ?? false;
           }
-
-          _todayAttendance = todayAttendance;
-        });
-      } else {
-        // Handle case where response data is null
-        setState(() {
-          _canCheckIn = true;
-          _todayAttendance = null;
+          LoggerUtil.debug("Yesterday incomplete: $_yesterdayIncomplete");
+          LoggerUtil.debug("Can check in: $_canCheckIn");
+          LoggerUtil.debug("Can check out: $_canCheckOut");
         });
 
-        // Optional: Log or show a message about the unexpected response
-        LoggerUtil.error('Attendance status response is null');
+        if (_yesterdayIncomplete != null && mounted) {
+          _showIncompleteAttendanceDialog();
+        }
       }
     } catch (e) {
       if (mounted) {
         LoggerUtil.error('Error checking attendance status', e);
-
-        // Reset to default state
-        setState(() {
-          _canCheckIn = true;
-          _todayAttendance = null;
-        });
-
         showCupertinoDialog(
           context: context,
           builder: (context) => CupertinoAlertDialog(
@@ -236,48 +275,6 @@ class _HomeContentState extends State<HomeContent> {
       }
     }
   }
-  // Future<void> _checkStatus() async {
-  //   try {
-  //     final response = await _attendanceService.getStatus();
-  //     LoggerUtil.debug('Status response: ${response.data}');
-
-  //     if (response.data != null) {
-  //       setState(() {
-  //         // Cek apakah sudah check-in dan check-out hari ini
-  //         final todayAttendance = response.data['today_attendance'];
-  //         final checkIn = todayAttendance['check_in'];
-  //         final checkOut = todayAttendance['check_out'];
-
-  //         // Jika belum check-out, maka tetap bisa check-out
-  //         if (checkIn != null && checkOut == null) {
-  //           _canCheckIn = false; // Sudah check-in
-  //         } else {
-  //           // Jika sudah check-out atau belum check-in sama sekali
-  //           _canCheckIn = true;
-  //         }
-
-  //         _todayAttendance = response.data['today_attendance'];
-  //       });
-  //     }
-  //   } catch (e) {
-  //     if (mounted) {
-  //       LoggerUtil.error('Error checking attendance status', e);
-  //       showCupertinoDialog(
-  //         context: context,
-  //         builder: (context) => CupertinoAlertDialog(
-  //           title: const Text('Error'),
-  //           content: Text(e.toString()),
-  //           actions: [
-  //             CupertinoDialogAction(
-  //               child: const Text('OK'),
-  //               onPressed: () => Navigator.pop(context),
-  //             ),
-  //           ],
-  //         ),
-  //       );
-  //     }
-  //   }
-  // }
 
   Future<bool> _isConnectedToOfficeNetwork() async {
     try {
@@ -296,10 +293,10 @@ class _HomeContentState extends State<HomeContent> {
       context: context,
       builder: (BuildContext context) {
         return CupertinoAlertDialog(
-          title: Text(_canCheckIn ? 'Check In' : 'Check Out'),
-          content: Text(_canCheckIn
-              ? LocaleKeys.are_you_sure_to_check_in_right_now.tr()
-              : LocaleKeys.are_you_sure_to_check_out_right_now.tr()),
+          title: Text(_canCheckOut ? 'Check Out' : 'Check In'),
+          content: Text(_canCheckOut
+              ? LocaleKeys.are_you_sure_to_check_out_right_now.tr()
+              : LocaleKeys.are_you_sure_to_check_in_right_now.tr()),
           actions: [
             CupertinoDialogAction(
               child: const Text(LocaleKeys.cancel),
@@ -347,18 +344,36 @@ class _HomeContentState extends State<HomeContent> {
         return;
       }
 
-      if (_canCheckIn) {
-        await _attendanceService.checkIn(latitude, longitude);
-      } else {
+      if (_canCheckOut) {
         await _attendanceService.checkOut(latitude, longitude);
+      } else {
+        await _attendanceService.checkIn(latitude, longitude);
       }
-      _checkStatus();
+      await _checkStatus();
+      if (mounted) {
+        showCupertinoDialog(
+          context: context,
+          builder: (context) => CupertinoAlertDialog(
+            title:
+                Text(_canCheckOut ? 'Check In Berhasil' : 'Check Out Berhasil'),
+            content: Text(_canCheckOut
+                ? 'Bismillah, semoga Allah memudahkan urusan-urusan kita dalam kebaikan.'
+                : 'Alhamdulillah, semoga Allah memberkahi ikhtiar kita dan mengampuni dosa-dosa kita.'),
+            actions: [
+              CupertinoDialogAction(
+                child: const Text('OK'),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+        );
+      }
     } catch (e) {
       if (mounted) {
         showCupertinoDialog(
           context: context,
           builder: (context) => CupertinoAlertDialog(
-            title: const Text('Error'),
+            title: const Text('Afwan'),
             content: Text(e.toString()),
             actions: [
               CupertinoDialogAction(
@@ -370,7 +385,7 @@ class _HomeContentState extends State<HomeContent> {
         );
       }
     } finally {
-      // Pastikan loading state selalu di-set ke false
+
       setState(() {
         _isLoading = false;
       });
@@ -379,6 +394,9 @@ class _HomeContentState extends State<HomeContent> {
 
   @override
   Widget build(BuildContext context) {
+    print("BUILD - Yesterday incomplete: $_yesterdayIncomplete");
+    print("BUILD - Can check in: $_canCheckIn");
+    print("BUILD - Can check out: $_canCheckOut");
     return CustomScaffold(
       onRefresh: () async {
         await context.read<AnnouncementCubit>().loadAnnouncements();
@@ -386,8 +404,9 @@ class _HomeContentState extends State<HomeContent> {
         await _loadPosts();
       },
       title: LocaleKeys.home,
+      scrollController: _scrollController,
       children: [
-        // Announcements Section
+
         BlocBuilder<AnnouncementCubit, AnnouncementState>(
           builder: (context, state) {
             if (state is AnnouncementLoading) {
@@ -396,17 +415,17 @@ class _HomeContentState extends State<HomeContent> {
 
             if (state is AnnouncementError) {
               if (state.message.contains('unauthorized')) {
-                // Clear any stored data
+
                 SharedPreferencesService.instance
                     .removeData(PreferenceKey.authToken);
                 SharedPreferencesService.instance
                     .removeData(PreferenceKey.userData);
 
                 if (context.mounted) {
-                  // Replace current screen with login
+
                   Navigator.of(context).pushNamedAndRemoveUntil(
                       Routes.login.path,
-                      (route) => false // Hapus semua route sebelumnya
+                      (route) => false 
                       );
                 }
               }
@@ -426,7 +445,7 @@ class _HomeContentState extends State<HomeContent> {
             return const SizedBox.shrink();
           },
         ),
-        // Attendance Section
+
         Container(
           margin: const EdgeInsets.symmetric(vertical: 20),
           padding: const EdgeInsets.all(20),
@@ -438,7 +457,6 @@ class _HomeContentState extends State<HomeContent> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Date section at top right
               Align(
                 alignment: Alignment.center,
                 child: RichText(
@@ -457,10 +475,10 @@ class _HomeContentState extends State<HomeContent> {
                 ),
               ),
               const SizedBox(height: 16),
-              // Attendance section
+
               Center(
                 child: Text(
-                  'Absen Sekarang',
+                  'Ahlan, ${userData?['name']}!',
                   style: Theme.of(context)
                       .textTheme
                       .titleLarge
@@ -471,71 +489,158 @@ class _HomeContentState extends State<HomeContent> {
               Center(
                 child: _isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : ElevatedButton(
-                        onPressed: _handleAttendance,
-                        child: Text(_canCheckIn ? 'Check In' : 'Check Out'),
+                    : Column(
+                        children: [
+                          if (_yesterdayIncomplete != null)
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              margin: const EdgeInsets.only(bottom: 10),
+                              decoration: BoxDecoration(
+                                color: Colors.orange[100],
+                                borderRadius: BorderRadius.circular(5),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.warning,
+                                      color: Colors.orange),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'Anda belum checkout kemarin (${DateFormat('dd/MM').format(DateTime.parse(_yesterdayIncomplete!['date']))})',
+                                      style:
+                                          TextStyle(color: Colors.orange[800]),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ElevatedButton(
+                            onPressed: _handleAttendance,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  _yesterdayIncomplete != null || _canCheckOut
+                                      ? Colors.orange[800]
+                                      : Theme.of(context).primaryColor,
+                            ),
+                            child: Text(
+                              _canCheckOut ? 'CHECK OUT' : 'CHECK IN',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-              ),
-              // Center(
-              //   child: ElevatedButton(
-              //     onPressed: _handleAttendance,
-              //     child: Text(_canCheckIn ? 'Check In' : 'Check Out'),
-              //   ),
-              // ),
+              )
+
             ],
           ),
         ),
-        // Today's Attendance
-        if (_todayAttendance != null)
-          if (_todayAttendance!['status'] != null)
-            Container(
-              margin: const EdgeInsets.only(bottom: 20),
-              padding: const EdgeInsets.all(20),
-              width: UIHelper.deviceWidth,
-              decoration: BoxDecoration(
-                color: ColorConstants.darkPrimaryColor,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Today\'s Attendance',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Colors.white,
-                          )),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Check In: ${_todayAttendance!['check_in'] != null ? DateFormat('EEEE, dd MMMM yyyy - HH:mm', 'id_ID').format(DateTime.parse(_todayAttendance!['check_in']).toLocal()) : 'Not yet'}',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(color: Colors.white),
-                  ),
-                  Text(
-                    'Check Out: ${_todayAttendance!['check_out'] != null ? DateFormat('EEEE, dd MMMM yyyy - HH:mm', 'id_ID').format(DateTime.parse(_todayAttendance!['check_out']).toLocal()) : 'Not yet'}',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(color: Colors.white),
-                  ),
-                  Text(
-                    'Status: ${_todayAttendance!['status']}',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(color: Colors.white),
-                  ),
-                  if (_todayAttendance!['late'] == true)
-                    const Text('Status: Late',
-                        style: TextStyle(color: Colors.red)),
-                  if (_todayAttendance!['is_overtime'] == true)
-                    const Text('Status: Overtime',
-                        style: TextStyle(color: Colors.orange)),
-                ],
-              ),
-            ),
 
-        // News Section Header
+        if (_todayAttendance != null)
+
+          Container(
+            margin: const EdgeInsets.only(bottom: 20),
+            padding: const EdgeInsets.all(20),
+            width: UIHelper.deviceWidth,
+            decoration: BoxDecoration(
+              color: ColorConstants.darkPrimaryColor,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Today\'s Attendance',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: Colors.white,
+                        )),
+                const SizedBox(height: 10),
+                Text(
+                  'Check In: ${_todayAttendance!['check_in'] != null ? DateFormat('EEEE, dd MMMM yyyy - HH:mm', 'id_ID').format(DateTime.parse(_todayAttendance!['check_in']).toLocal()) : 'Not yet'}',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(color: Colors.white),
+                ),
+                Text(
+                  'Check Out: ${_todayAttendance!['check_out'] != null ? DateFormat('EEEE, dd MMMM yyyy - HH:mm', 'id_ID').format(DateTime.parse(_todayAttendance!['check_out']).toLocal()) : 'Not yet'}',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(color: Colors.white),
+                ),
+                Text(
+                  'Status: ${_todayAttendance!['status']}',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(color: Colors.white),
+                ),
+                Text(
+                  'Email: ${userData!['email']} (${_appVersion})',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(color: Colors.white),
+                ),
+                if (_todayAttendance!['late'] == true)
+                  const Text('Status: Late',
+                      style: TextStyle(color: Colors.red)),
+                if (_todayAttendance!['is_overtime'] == true)
+                  const Text('Status: Overtime',
+                      style: TextStyle(color: Colors.orange)),
+              ],
+            ),
+          ),
+
+        if (_yesterdayIncomplete != null)
+          Container(
+            margin: const EdgeInsets.only(bottom: 20),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.orange[100],
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.orange),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.warning, color: Colors.orange[800]),
+                    const SizedBox(width: 8),
+                    Text(
+                      'ABSENSI BELUM SELESAI',
+                      style: TextStyle(
+                        color: Colors.orange[800],
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Anda belum melakukan checkout pada:',
+                  style: TextStyle(color: Colors.orange[800]),
+                ),
+                Text(
+                  DateFormat('EEEE, dd MMMM yyyy')
+                      .format(DateTime.parse(_yesterdayIncomplete!['date'])),
+                  style: TextStyle(
+                    color: Colors.orange[800],
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Silakan lakukan checkout terlebih dahulu',
+                  style: TextStyle(color: Colors.orange[800]),
+                ),
+              ],
+            ),
+          ),
+
         Container(
           margin: const EdgeInsets.only(top: 20, bottom: 10),
           width: UIHelper.deviceWidth,
@@ -545,7 +650,6 @@ class _HomeContentState extends State<HomeContent> {
           ),
         ),
 
-        // WordPress Posts
         ..._posts
             .map((post) => Container(
                   margin: const EdgeInsets.only(bottom: 20),

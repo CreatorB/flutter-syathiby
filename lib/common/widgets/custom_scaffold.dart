@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syathiby/features/theme/bloc/theme_bloc.dart';
 import 'package:syathiby/features/theme/bloc/theme_state.dart';
 
-class CustomScaffold extends StatelessWidget {
+class CustomScaffold extends StatefulWidget {
   final String title;
   final List<Widget> children;
   final Future<void> Function()? onRefresh;
@@ -13,6 +13,8 @@ class CustomScaffold extends StatelessWidget {
   final Color? navigationBarBackgroundColor;
   final bool automaticallyImplyLeading;
   final EdgeInsetsDirectional? navigationBarPadding;
+  final ScrollController? scrollController;
+
   const CustomScaffold({
     super.key,
     required this.title,
@@ -22,7 +24,29 @@ class CustomScaffold extends StatelessWidget {
     this.navigationBarBackgroundColor = Colors.transparent,
     this.automaticallyImplyLeading = true,
     this.navigationBarPadding,
+    this.scrollController,
   });
+
+  @override
+  State<CustomScaffold> createState() => _CustomScaffoldState();
+}
+
+class _CustomScaffoldState extends State<CustomScaffold> {
+  late final ScrollController _effectiveScrollController;
+  
+  @override
+  void initState() {
+    super.initState();
+    _effectiveScrollController = widget.scrollController ?? ScrollController();
+  }
+  
+  @override
+  void dispose() {
+    if (widget.scrollController == null) {
+      _effectiveScrollController.dispose();
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,38 +55,65 @@ class CustomScaffold extends StatelessWidget {
       child: BlocBuilder<ThemeBloc, ThemeState>(
         builder: (context, themeState) {
           return CupertinoPageScaffold(
-            child: CustomScrollView(
-              physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-              slivers: [
-                CupertinoSliverNavigationBar(
-                  padding: navigationBarPadding,
-                  backgroundColor: navigationBarBackgroundColor,
-                  border: null,
-                  largeTitle: Text(title).tr(),
-                  brightness: themeState.isDark ? Brightness.dark : Brightness.light,
-                  trailing: trailing,
-                  automaticallyImplyLeading: automaticallyImplyLeading,
+            navigationBar: CupertinoNavigationBar(
+              padding: widget.navigationBarPadding,
+              backgroundColor: widget.navigationBarBackgroundColor,
+              border: null,
+              middle: Text(
+                widget.title,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold
                 ),
-                onRefresh != null
-                    ? CupertinoSliverRefreshControl(
-                        onRefresh: onRefresh,
-                      )
-                    : const SliverToBoxAdapter(),
-                SliverPadding(
-                  padding: const EdgeInsets.all(20),
-                  sliver: SliverSafeArea(
-                    top: false,
-                    sliver: SliverList(
-                      delegate: SliverChildListDelegate(
-                        children,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ).tr(),
+              brightness: themeState.isDark ? Brightness.dark : Brightness.light,
+              trailing: widget.trailing,
+              automaticallyImplyLeading: widget.automaticallyImplyLeading,
+            ),
+            child: SafeArea(
+              bottom: true,
+              child: widget.onRefresh != null 
+                ? _buildWithRefresh(context)
+                : _buildWithoutRefresh(context),
             ),
           );
         },
+      ),
+    );
+  }
+  
+  Widget _buildWithRefresh(BuildContext context) {
+    return RefreshIndicator(
+      onRefresh: widget.onRefresh!,
+      child: _buildScrollView(context),
+    );
+  }
+  
+  Widget _buildWithoutRefresh(BuildContext context) {
+    return _buildScrollView(context);
+  }
+  
+  Widget _buildScrollView(BuildContext context) {
+    return SingleChildScrollView(
+      controller: _effectiveScrollController,
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: BouncingScrollPhysics(),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Add extra padding at the top for better scrolling
+            const SizedBox(height: 8),
+            
+            // Main content
+            ...widget.children,
+            
+            // Add extra padding at the bottom for better scrolling
+            const SizedBox(height: 50),
+          ],
+        ),
       ),
     );
   }

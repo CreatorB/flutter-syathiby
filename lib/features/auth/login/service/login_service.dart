@@ -17,7 +17,6 @@ class LoginService {
       final token = jsonData['data']['token'];
       final msg = jsonData['data']['message'];
 
-      // Simpan data user ke dalam shared preferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('user_id', user['id'].toString());
       await prefs.setString('user_name', user['name']);
