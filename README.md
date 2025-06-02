@@ -117,7 +117,7 @@ To generate a **APKS (for Android Testing)**:
 - FVM (Flutter Version Management) / Split APK by structure
 
 ```bash
-flutter build apk --release --target-platform=android-arm,android-arm64 --split-per-abifvm flutter build apk --release --target-platform=android-arm,android-arm64 --split-per-abi
+fvm flutter build apk --release --target-platform=android-arm,android-arm64 --split-per-abi
 ```
 
 - [Bundletool](https://developer.android.com/studio/command-line/bundletool) (rename .apks to .zip and extract universal.apk from it)

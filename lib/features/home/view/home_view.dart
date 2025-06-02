@@ -108,8 +108,8 @@ class _HomeContentState extends State<HomeContent> {
   Map<String, dynamic>? _yesterdayIncomplete;
   final ScrollController _scrollController = ScrollController();
   final UserService _userService = UserService();
-  Map<String, dynamic>? userData; 
-  HttpResponseModel<dynamic>? apiResponse; 
+  Map<String, dynamic>? userData;
+  HttpResponseModel<dynamic>? apiResponse;
   late String _appVersion;
 
   @override
@@ -127,8 +127,8 @@ class _HomeContentState extends State<HomeContent> {
     if (authToken != null) {
       final response = await _userService.getUserData(token: authToken);
       setState(() {
-      _appVersion = "v${packageInfo.version}";
-        apiResponse = response; 
+        _appVersion = "v${packageInfo.version}";
+        apiResponse = response;
         userData =
             response.data is Map ? response.data as Map<String, dynamic> : null;
       });
@@ -385,7 +385,6 @@ class _HomeContentState extends State<HomeContent> {
         );
       }
     } finally {
-
       setState(() {
         _isLoading = false;
       });
@@ -397,6 +396,16 @@ class _HomeContentState extends State<HomeContent> {
     print("BUILD - Yesterday incomplete: $_yesterdayIncomplete");
     print("BUILD - Can check in: $_canCheckIn");
     print("BUILD - Can check out: $_canCheckOut");
+    if (userData == null) {
+      return CustomScaffold(
+        title: LocaleKeys.home,
+        children: [
+          Center(
+            child: CupertinoActivityIndicator(),
+          ),
+        ],
+      );
+    }
     return CustomScaffold(
       onRefresh: () async {
         await context.read<AnnouncementCubit>().loadAnnouncements();
@@ -406,7 +415,6 @@ class _HomeContentState extends State<HomeContent> {
       title: LocaleKeys.home,
       scrollController: _scrollController,
       children: [
-
         BlocBuilder<AnnouncementCubit, AnnouncementState>(
           builder: (context, state) {
             if (state is AnnouncementLoading) {
@@ -415,18 +423,14 @@ class _HomeContentState extends State<HomeContent> {
 
             if (state is AnnouncementError) {
               if (state.message.contains('unauthorized')) {
-
                 SharedPreferencesService.instance
                     .removeData(PreferenceKey.authToken);
                 SharedPreferencesService.instance
                     .removeData(PreferenceKey.userData);
 
                 if (context.mounted) {
-
                   Navigator.of(context).pushNamedAndRemoveUntil(
-                      Routes.login.path,
-                      (route) => false 
-                      );
+                      Routes.login.path, (route) => false);
                 }
               }
               return const SizedBox.shrink();
@@ -445,7 +449,6 @@ class _HomeContentState extends State<HomeContent> {
             return const SizedBox.shrink();
           },
         ),
-
         Container(
           margin: const EdgeInsets.symmetric(vertical: 20),
           padding: const EdgeInsets.all(20),
@@ -474,8 +477,23 @@ class _HomeContentState extends State<HomeContent> {
                   ),
                 ),
               ),
+              Align(
+                alignment: Alignment.center,
+                child: RichText(
+                  textAlign: TextAlign.right,
+                  text: TextSpan(
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.white70,
+                          fontSize: 10,
+                        ),
+                    children: [
+                      TextSpan(
+                          text: '(${userData!['email'] ?? 'Loading ...' } - ${_appVersion})'),
+                    ],
+                  ),
+                ),
+              ),
               const SizedBox(height: 16),
-
               Center(
                 child: Text(
                   'Ahlan, ${userData?['name']}!',
@@ -533,13 +551,10 @@ class _HomeContentState extends State<HomeContent> {
                         ],
                       ),
               )
-
             ],
           ),
         ),
-
         if (_todayAttendance != null)
-
           Container(
             margin: const EdgeInsets.only(bottom: 20),
             padding: const EdgeInsets.all(20),
@@ -577,13 +592,6 @@ class _HomeContentState extends State<HomeContent> {
                       .bodyMedium
                       ?.copyWith(color: Colors.white),
                 ),
-                Text(
-                  'Email: ${userData!['email']} (${_appVersion})',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(color: Colors.white),
-                ),
                 if (_todayAttendance!['late'] == true)
                   const Text('Status: Late',
                       style: TextStyle(color: Colors.red)),
@@ -593,7 +601,6 @@ class _HomeContentState extends State<HomeContent> {
               ],
             ),
           ),
-
         if (_yesterdayIncomplete != null)
           Container(
             margin: const EdgeInsets.only(bottom: 20),
@@ -640,7 +647,6 @@ class _HomeContentState extends State<HomeContent> {
               ],
             ),
           ),
-
         Container(
           margin: const EdgeInsets.only(top: 20, bottom: 10),
           width: UIHelper.deviceWidth,
@@ -649,7 +655,6 @@ class _HomeContentState extends State<HomeContent> {
             style: Theme.of(context).textTheme.titleLarge,
           ),
         ),
-
         ..._posts
             .map((post) => Container(
                   margin: const EdgeInsets.only(bottom: 20),

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:syathiby/common/helpers/app_helper.dart';
 
 class LoginResponse {
   final bool success;
@@ -151,7 +152,7 @@ class UserModel {
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
     return UserModel(
-      id: map['id'] as int,
+      id: AppHelper.parseInt(map['id']),
       uuid: map['uuid'] as String,
       name: map['name'] as String,
       email: map['email'] as String,
@@ -160,8 +161,8 @@ class UserModel {
       gender: map['gender'] as String?,
       phone: map['phone'] as String?,
       nip: map['nip'] as String,
-      workingDays: map['working_days'] as int,
-      jumlahCuti: map['jumlah_cuti'] as int,
+      workingDays: AppHelper.parseInt(map['working_days']),
+      jumlahCuti: AppHelper.parseInt(map['jumlah_cuti']),
       lokasiKerja: map['lokasi_kerja'] as String?,
       tglMulai: map['tgl_mulai'] as String?,
       tglBerhenti: map['tgl_berhenti'] as String?,
@@ -171,11 +172,11 @@ class UserModel {
       gelar: map['gelar'] as String?,
       jurusan: map['jurusan'] as String?,
       sekolahUniversitas: map['sekolah_universitas'] as String?,
-      tahunLulus1: map['tahun_lulus_1'] as int?,
+      tahunLulus1: AppHelper.tryParseInt(map['tahun_lulus_1']),
       pendidikan2: map['pendidikan_2'] as String?,
       jurusanPendidikan2: map['jurusan_pendidikan_2'] as String?,
       sekolahUniversitas2: map['sekolah_universitas_2'] as String?,
-      tahunLulus2: map['tahun_lulus_2'] as int?,
+      tahunLulus2: AppHelper.tryParseInt(map['tahun_lulus_2']),
       alamat: map['alamat'] as String?,
       alamatEmail: map['alamat_email'] as String?,
       typePegawai: map['type_pegawai'] as String?,
@@ -189,7 +190,7 @@ class UserModel {
       kontrakSelesai1: map['kontrak_selesai_1'] as String?,
       kontrakMulai2: map['kontrak_mulai_2'] as String?,
       kontrakSelesai2: map['kontrak_selesai_2'] as String?,
-      gajiPokok: map['gaji_pokok'] as int?,
+      gajiPokok: AppHelper.tryParseInt(map['gaji_pokok']),
       ptt: map['ptt'] as String?,
       tJabatan: map['t_jabatan'] as String?,
       tKehadiran: map['t_kehadiran'] as String?,
@@ -257,7 +258,7 @@ class Schedule {
 
   factory Schedule.fromMap(Map<String, dynamic> map) {
     return Schedule(
-      id: map['id'] as int,
+      id: AppHelper.parseInt(map['id']),
       mondayStart: map['monday_start'] as String,
       mondayEnd: map['monday_end'] as String,
       tuesdayStart: map['tuesday_start'] as String,
@@ -303,10 +304,10 @@ class Department {
 
   factory Department.fromMap(Map<String, dynamic> map) {
     return Department(
-      id: map['id'] as int,
+      id: AppHelper.parseInt(map['id']),
       name: map['name'] as String,
       code: map['code'] as String,
-      headId: map['head_id'] as int?,
+      headId: AppHelper.tryParseInt(map['head_id']),
       location: map['location'] as String?,
       description: map['description'] as String?,
       status: map['status'] as String,
@@ -339,11 +340,11 @@ class Part {
 
   factory Part.fromMap(Map<String, dynamic> map) {
     return Part(
-      id: map['id'] as int,
+      id: AppHelper.parseInt(map['id']),
       name: map['name'] as String,
-      departmentId: map['department_id'] as int,
+      departmentId: AppHelper.parseInt(map['department_id']),
       code: map['code'] as String,
-      headId: map['head_id'] as int?,
+      headId: AppHelper.tryParseInt(map['head_id']),
       description: map['description'] as String?,
       createdAt: DateTime.parse(map['created_at']),
       updatedAt: DateTime.parse(map['updated_at']),

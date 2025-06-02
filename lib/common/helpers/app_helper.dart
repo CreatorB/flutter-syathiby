@@ -16,6 +16,33 @@ import 'package:uuid/uuid.dart';
 import 'package:gal/gal.dart';
 
 class AppHelper {
+  static int parseInt(dynamic value, [int defaultValue = 0]) {
+    return int.tryParse(value?.toString() ?? '') ?? defaultValue;
+  }
+
+  static int? tryParseInt(dynamic value) {
+    return value != null ? int.tryParse(value.toString()) : null;
+  }
+
+  static double parseDouble(dynamic value, [double defaultValue = 0.0]) {
+    return double.tryParse(value?.toString() ?? '') ?? defaultValue;
+  }
+
+  static double? tryParseDouble(dynamic value) {
+    return value != null ? double.tryParse(value.toString()) : null;
+  }
+
+  static bool parseBool(dynamic value, [bool defaultValue = false]) {
+    if (value == null) return defaultValue;
+    if (value is bool) return value;
+    final str = value.toString().toLowerCase();
+    return str == 'true' || str == '1';
+  }
+
+  static String parseString(dynamic value, [String defaultValue = '']) {
+    return value?.toString() ?? defaultValue;
+  }
+
   static HttpResponseModel checkRegisterForm(
       {required String name, required String email, required String password}) {
     if (!AppConstants.emailRegex.hasMatch(email)) {

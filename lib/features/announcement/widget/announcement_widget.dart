@@ -259,10 +259,7 @@ ${widget.announcement.linkUrl ?? ''}
                   shrinkWrap: true,
                   onLinkTap: (url, _, __) async {
                     if (url != null) {
-                      final uri = Uri.parse(url);
-                      if (await canLaunchUrl(uri)) {
-                        await launchUrl(uri, mode: LaunchMode.externalApplication);
-                      }
+                      await _launchUrlSafely(url);
                     }
                   },
                 ),
@@ -301,7 +298,7 @@ ${widget.announcement.linkUrl ?? ''}
       margin: const EdgeInsets.only(top: 8),
       child: switch (widget.announcement.type) {
         'app_update' => ElevatedButton.icon(
-            onPressed: _handleLink,
+            onPressed: () => _handleLink(forceExternal: true),
             icon: const Icon(Icons.system_update),
             label: const Text('Update Aplikasi'),
             style: ElevatedButton.styleFrom(
@@ -319,24 +316,96 @@ ${widget.announcement.linkUrl ?? ''}
     );
   }
 
-  Future<void> _handleLink() async {
+  // Improved URL handling with better error handling and fallbacks
+  Future<void> _handleLink({bool forceExternal = false}) async {
     if (widget.announcement.linkUrl == null) return;
 
     try {
-      final url = Uri.parse(widget.announcement.linkUrl!);
-
-      final mode = switch (widget.announcement.linkType) {
-        'browser' => LaunchMode.externalApplication,
-        'app' => LaunchMode.platformDefault,
-        'deeplink' => LaunchMode.platformDefault,
-        _ => LaunchMode.platformDefault,
-      };
-
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: mode);
-      }
+      final urlString = widget.announcement.linkUrl!;
+      
+      // Attempt to launch the URL with the specified mode
+      await _launchUrlSafely(urlString, forceExternal: forceExternal);
     } catch (e) {
       LoggerUtil.error('Error handling link', e);
+      // Show error to user
+      _showSnackBar(context, 'Gagal membuka link. Coba lagi nanti.');
+    }
+  }
+  
+  // Helper method to launch URLs with fallback options
+  Future<bool> _launchUrlSafely(String urlString, {bool forceExternal = false}) async {
+    try {
+      // Ensure URL is properly formatted
+      var url = Uri.parse(urlString);
+      
+      // Determine launch mode based on announcement type or force parameter
+      LaunchMode mode;
+      if (forceExternal) {
+        mode = LaunchMode.externalApplication;
+      } else {
+        mode = switch (widget.announcement.linkType) {
+          'browser' => LaunchMode.externalApplication,
+          'app' => LaunchMode.platformDefault,
+          'deeplink' => LaunchMode.platformDefault,
+          _ => LaunchMode.platformDefault,
+        };
+      }
+      
+      // First try with specified mode
+      bool success = await canLaunchUrl(url);
+      if (success) {
+        return await launchUrl(url, mode: mode);
+      }
+      
+      // If failed with specified mode and it wasn't external, try external
+      if (mode != LaunchMode.externalApplication) {
+        success = await canLaunchUrl(url);
+        if (success) {
+          return await launchUrl(url, mode: LaunchMode.externalApplication);
+        }
+      }
+      
+      // If still not successful, try with in-app browser if it was a web URL
+      if ((url.scheme == 'http' || url.scheme == 'https') && 
+          mode != LaunchMode.inAppWebView) {
+        success = await canLaunchUrl(url);
+        if (success) {
+          return await launchUrl(url, mode: LaunchMode.inAppWebView);
+        }
+      }
+      
+      // If Google Play URL, attempt to use market:// URL scheme
+      if (urlString.contains('play.google.com/store/apps')) {
+        final packageName = _extractPackageNameFromPlayStoreUrl(urlString);
+        if (packageName != null) {
+          final marketUrl = Uri.parse('market://details?id=$packageName');
+          success = await canLaunchUrl(marketUrl);
+          if (success) {
+            return await launchUrl(marketUrl, mode: LaunchMode.externalApplication);
+          }
+        }
+      }
+      
+      // If all attempts failed, show message
+      _showSnackBar(context, 'Tidak dapat membuka link: $urlString');
+      return false;
+    } catch (e) {
+      LoggerUtil.error('Error launching URL', e);
+      _showSnackBar(context, 'Terjadi kesalahan saat membuka link');
+      return false;
+    }
+  }
+  
+  // Extract package name from Google Play URL
+  String? _extractPackageNameFromPlayStoreUrl(String url) {
+    try {
+      final uri = Uri.parse(url);
+      if (uri.host == 'play.google.com' && uri.path.contains('/store/apps/details')) {
+        return uri.queryParameters['id'];
+      }
+      return null;
+    } catch (e) {
+      return null;
     }
   }
 }
